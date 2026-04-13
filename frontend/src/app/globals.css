@@ -2,41 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --green-brand:  #2E7D32;
+  --green-dark:   #1B5E20;
+  --green-action: #4CAF50;
+  --green-hover:  #388E3C;
+  --green-bg:     #E8F5E9;
+  --green-bg2:    #F1F8E9;
+  --green-border: #A5D6A7;
+}
+
 @layer base {
-  :root {
-    --brand: #1d4ed8;
-    --brand-light: #3b82f6;
-  }
   html { @apply antialiased; }
-  body { @apply bg-gray-50 text-gray-900; }
+  body { background-color: #E8F5E9; color: #212121; }
+  h2   { color: #2E7D32; font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; }
+  h3   { color: #2E7D32; font-size: 1.125rem; font-weight: 500; margin-bottom: 1rem; }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-800 active:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           bg-[#4CAF50] text-white font-medium rounded-lg
+           hover:bg-[#388E3C] active:bg-[#2E7D32]
+           transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           bg-white text-[#2E7D32] font-medium rounded-lg
+           border border-[#4CAF50] hover:bg-[#E8F5E9]
+           transition-colors disabled:opacity-50;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           bg-red-600 text-white font-medium rounded-lg
+           hover:bg-red-700 transition-colors disabled:opacity-50;
   }
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-xl p-6 border border-gray-100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
   }
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
+           focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:border-[#4CAF50]
+           transition-colors placeholder-gray-400;
   }
-  .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
-  }
-  .badge-gold {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full;
-  }
-  .badge-silver {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full;
-  }
-  .badge-bronze {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full;
-  }
+  .label { @apply block text-sm font-medium text-gray-700 mb-1; }
+  .badge-gold   { @apply inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full; }
+  .badge-silver { @apply inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full; }
+  .badge-bronze { @apply inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full; }
+  .badge-success { @apply px-2 py-0.5 bg-[#E8F5E9] text-[#2E7D32] text-xs font-medium rounded-full; }
+  .badge-pending { @apply px-2 py-0.5 bg-yellow-50 text-yellow-700 text-xs font-medium rounded-full; }
+  .badge-error   { @apply px-2 py-0.5 bg-red-50 text-red-700 text-xs font-medium rounded-full; }
 }

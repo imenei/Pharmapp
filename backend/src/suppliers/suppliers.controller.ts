@@ -14,13 +14,22 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { SubscriptionDto } from './dto/subscription.dto';
-
+import { Public } from '../common/decorators/public.decorator';
 @Controller('suppliers')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class SuppliersController {
   constructor(private service: SuppliersService) {}
 
+  // ── Route PUBLIQUE — pas de guard ──────────────────────────────────────
+  @Get('gold')
+  @Public()
+
+  getGold() {
+    return this.service.getGoldSuppliers();
+  }
+
+  // ── Routes protégées ───────────────────────────────────────────────────
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('pharmacist', 'admin', 'supplier')
   findAll(
     @Query('wilaya') wilaya?: string,
@@ -31,31 +40,29 @@ export class SuppliersController {
     return this.service.findAll(wilaya, search, page, limit);
   }
 
-  @Get('gold')
-  @Roles('pharmacist', 'admin', 'supplier')
-  getGold() {
-    return this.service.getGoldSuppliers();
-  }
-
   @Get('plans')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('supplier', 'admin')
   getPlans() {
     return this.service.getPlans();
   }
 
   @Get('me/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('supplier')
   getMyStats(@CurrentUser('id') userId: string) {
     return this.service.getStats(userId);
   }
 
   @Get('me/subscription')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('supplier')
   getMySubscription(@CurrentUser('id') userId: string) {
     return this.service.getCurrentSubscription(userId);
   }
 
   @Patch('me/profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('supplier')
   @UseInterceptors(
     FileInterceptor('avatar', {
@@ -77,6 +84,7 @@ export class SuppliersController {
   }
 
   @Post('me/subscription')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('supplier')
   @UseInterceptors(
     FileInterceptor('proof', {
@@ -98,12 +106,14 @@ export class SuppliersController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('pharmacist', 'admin', 'supplier')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
   @Post('ratings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('pharmacist')
   createRating(@CurrentUser('id') userId: string, @Body() dto: CreateRatingDto) {
     return this.service.createRating(userId, dto);

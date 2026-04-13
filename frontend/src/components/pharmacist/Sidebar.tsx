@@ -2,68 +2,105 @@
 // src/components/pharmacist/Sidebar.tsx
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Building2, FileSearch, Gift, Bell, Star, User, LogOut } from 'lucide-react';
-import { clsx } from 'clsx';
+import { LayoutDashboard, Building2, Tag, FileText, Star, Bell, LogOut, User } from 'lucide-react';
 import { logout } from '@/lib/auth';
-import { useNotifications } from '@/hooks/useApi';
+import { useMe, useNotifications } from '@/hooks/useApi';
 
-const links = [
-  { href: '/pharmacist/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-  { href: '/pharmacist/suppliers', label: 'Fournisseurs', icon: Building2 },
-  { href: '/pharmacist/listings-search', label: 'Recherche produits', icon: FileSearch },
-  { href: '/pharmacist/offers', label: 'Offres', icon: Gift },
-  { href: '/pharmacist/notifications', label: 'Notifications', icon: Bell },
-  { href: '/pharmacist/ratings', label: 'Mes avis', icon: Star },
-  { href: '/pharmacist/profile', label: 'Profil', icon: User },
+const menuItems = [
+  { href: '/pharmacist/dashboard',        label: 'Tableau de bord', icon: LayoutDashboard },
+  { href: '/pharmacist/suppliers',         label: 'Fournisseurs',    icon: Building2 },
+  { href: '/pharmacist/offers',            label: 'Offres',          icon: Tag },
+  { href: '/pharmacist/listings-search',   label: 'Listings PDF',    icon: FileText },
+  { href: '/pharmacist/ratings',           label: 'Notes & Avis',    icon: Star },
+  { href: '/pharmacist/notifications',     label: 'Notifications',   icon: Bell },
 ];
 
 export default function PharmacistSidebar() {
-  const path = usePathname();
-  const router = useRouter();
+  const pathname = usePathname();
+  const router   = useRouter();
+  const { data: me } = useMe();
   const { data: notifData } = useNotifications({ unreadOnly: true });
   const unread = notifData?.unreadCount ?? 0;
 
-  const handleLogout = async () => {
-    await logout();
-    router.push('/auth/signin');
-  };
+  const handleLogout = async () => { await logout(); router.push('/auth/signin'); };
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-64 bg-[#E8F5E9] text-gray-800 min-h-screen p-4 flex flex-col border-r border-[#A5D6A7]">
+
       {/* Logo */}
-      <div className="p-6 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-blue-700">💊 El Saidalya</h1>
-        <p className="text-xs text-gray-500 mt-0.5">Portail Pharmacien</p>
+      <div className="mb-8 pt-2">
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-center bg-white rounded-lg p-1.5 shadow-sm border border-green-100">
+            <span className="text-2xl">💊</span>
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold text-[#2E7D32] leading-tight">El Saidaliya</h1>
+            <span className="text-sm text-green-600 font-medium">Espace Pharmacien</span>
+          </div>
+        </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-4 space-y-1">
-        {links.map(({ href, label, icon: Icon }) => {
-          const active = path === href || path.startsWith(href + '/');
-          const isNotif = href.includes('notifications');
-          return (
-            <Link key={href} href={href}
-              className={clsx('flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                active ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              )}>
-              <Icon size={18} />
-              <span className="flex-1">{label}</span>
-              {isNotif && unread > 0 && (
-                <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">{unread}</span>
-              )}
-            </Link>
-          );
-        })}
+      <nav className="flex-1">
+        <ul className="space-y-2">
+          {menuItems.map(({ href, label, icon: Icon }) => {
+            const active  = pathname === href || pathname.startsWith(href + '/');
+            const isNotif = href.includes('notifications');
+            return (
+              <li key={href}>
+                <Link href={href}
+                  className={`flex items-center p-3 rounded-lg transition-colors ${
+                    active
+                      ? 'bg-[#2E7D32] text-white font-semibold shadow-md'
+                      : 'text-green-800 hover:bg-green-200 hover:text-green-900'
+                  }`}>
+                  <Icon className="h-5 w-5 mr-3" />
+                  <span className="flex-1">{label}</span>
+                  {isNotif && unread > 0 && (
+                    <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                      {unread}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
-      {/* Logout */}
-      <div className="p-4 border-t border-gray-100">
-        <button onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full">
-          <LogOut size={18} />
-          <span>Déconnexion</span>
-        </button>
+      {/* User */}
+      <div className="pt-4 border-t border-[#A5D6A7] mt-auto">
+        {me ? (
+          <>
+            <Link href="/pharmacist/profile"
+              className="flex items-center p-3 text-green-800 hover:bg-green-200 rounded-lg transition-colors mb-2">
+              <div className="flex items-center justify-center bg-green-200 rounded-full h-10 w-10 shrink-0 overflow-hidden">
+                {me.profile?.avatarUrl
+                  ? <img src={me.profile.avatarUrl} alt="" className="h-10 w-10 object-cover" />
+                  : <User className="h-5 w-5 text-green-700" />}
+              </div>
+              <div className="ml-3 flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{me.profile?.companyName || 'Pharmacie'}</p>
+                <p className="text-xs text-green-600 truncate">{me.email}</p>
+                {me.profile?.wilaya && <p className="text-xs text-green-500 truncate">{me.profile.wilaya}</p>}
+              </div>
+            </Link>
+            <button onClick={handleLogout}
+              className="flex items-center w-full p-3 text-green-800 hover:bg-green-200 rounded-lg transition-colors">
+              <LogOut className="h-5 w-5 mr-3 text-green-700" />
+              Déconnexion
+            </button>
+          </>
+        ) : (
+          <div className="flex items-center p-3">
+            <div className="animate-pulse bg-green-200 rounded-full h-10 w-10" />
+            <div className="ml-3 space-y-2">
+              <div className="h-4 bg-green-200 rounded w-20" />
+              <div className="h-3 bg-green-200 rounded w-16" />
+            </div>
+          </div>
+        )}
       </div>
-    </aside>
+    </div>
   );
 }

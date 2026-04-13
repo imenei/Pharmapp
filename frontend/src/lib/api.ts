@@ -1,8 +1,6 @@
 // src/lib/api.ts
 import axios from 'axios';
 
-// Base URL dynamique selon l'environnement
-// NEXT_PUBLIC_API_URL doit être défini dans .env.local du frontend
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
   withCredentials: true,
@@ -11,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Ajouter le token d'accès à chaque requête
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('accessToken');
@@ -22,7 +19,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Gestion auto-refresh sur 401
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = [];
 
@@ -34,10 +30,18 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+const PUBLIC_PATHS = ['/', '/auth/signin', '/auth/signup', '/auth/signup-success', '/contact', '/legal', '/waiting-approval'];
+
+const isPublicPath = () => {
+  if (typeof window === 'undefined') return true;
+  return PUBLIC_PATHS.some(p => window.location.pathname === p || window.location.pathname.startsWith(p + '/'));
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
+
     if (error.response?.status === 401 && !original._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -57,11 +61,13 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) throw new Error('No refresh token');
 
-        const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/refresh`, { refreshToken });
+        const { data } = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/refresh`,
+          { refreshToken }
+        );
 
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
-
         api.defaults.headers.common.Authorization = `Bearer ${data.accessToken}`;
         processQueue(null, data.accessToken);
 
@@ -71,12 +77,18 @@ api.interceptors.response.use(
         processQueue(err, null);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        if (typeof window !== 'undefined') window.location.href = '/auth/signin';
+
+        // Ne rediriger vers signin que si on est sur une page protégée
+        if (!isPublicPath()) {
+          window.location.href = '/auth/signin';
+        }
+
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   }
 );
