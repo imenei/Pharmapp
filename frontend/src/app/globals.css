@@ -54,3 +54,4 @@
   .badge-pending { @apply px-2 py-0.5 bg-yellow-50 text-yellow-700 text-xs font-medium rounded-full; }
   .badge-error   { @apply px-2 py-0.5 bg-red-50 text-red-700 text-xs font-medium rounded-full; }
 }
+
