@@ -42,7 +42,7 @@ export default function LegalPage() {
             <>
               <h2 className="text-2xl font-semibold text-[#2E7D32] mt-0">Conditions d&apos;Utilisation</h2>
               <p className="text-gray-600">
-                Bienvenue sur Elsaidaliya. En utilisant notre plateforme, vous acceptez ces conditions d&apos;utilisation. Veuillez les lire attentivement.
+                Bienvenue sur PHARMA FLOW. En utilisant notre plateforme, vous acceptez ces conditions d&apos;utilisation. Veuillez les lire attentivement.
               </p>
 
               <h3 className="text-xl font-semibold text-[#2E7D32]">1. Acceptation des Conditions</h3>

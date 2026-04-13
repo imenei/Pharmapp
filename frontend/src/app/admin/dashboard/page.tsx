@@ -38,6 +38,15 @@ export default function AdminDashboard() {
     { key: 'messages', label: 'Messages', icon: MessageSquare, count: stats?.newMessages },
   ];
 
+  // Fonction pour obtenir l'URL du registre de commerce
+  const getRegisterUrl = (user: any) => {
+    // Vérifier les différents champs possibles pour le registre
+    return user.profile?.registerUrl || 
+           user.profile?.avatarUrl || 
+           user.documents?.find((d: any) => d.type === 'registre_commerce')?.url ||
+           null;
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -85,7 +94,10 @@ export default function AdminDashboard() {
               </div>
               {usersLoad ? <div className="flex justify-center py-8"><Spinner size="lg"/></div> : (
                 <div className="space-y-2">
-                  {usersData?.data?.map((user: any) => (
+                  {usersData?.data?.map((user: any) => {
+                    const registerUrl = getRegisterUrl(user);
+                    
+                    return (
                     <div key={user.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                       <Avatar src={user.profile?.avatarUrl} name={user.profile?.companyName ?? user.email} size={44}/>
                       <div className="flex-1 min-w-0">
@@ -107,7 +119,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className={clsx('px-2 py-0.5 text-xs font-medium rounded-full',
                             user.role === 'pharmacist' ? 'bg-blue-100 text-blue-700' : user.role === 'supplier' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700')}>
-                            {user.role}
+                            {user.role === 'pharmacist' ? 'Pharmacien' : user.role === 'supplier' ? 'Fournisseur' : user.role}
                           </span>
                           <span className={clsx('px-2 py-0.5 text-xs font-medium rounded-full',
                             user.status === 'approved' ? 'bg-green-100 text-green-700' : user.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}>
@@ -117,6 +129,18 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        {/* Bouton pour voir le registre de commerce */}
+                        {registerUrl && (
+                          <a 
+                            href={`${API_BASE}${registerUrl}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Voir le registre de commerce"
+                          >
+                            <FileText size={18}/>
+                          </a>
+                        )}
                         {user.status === 'pending' && <>
                           <button onClick={() => approveUser.mutate(user.id)}
                             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Approuver">
@@ -137,7 +161,7 @@ export default function AdminDashboard() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                  )})}
                   {usersData?.data?.length === 0 && <p className="text-center py-10 text-gray-500">Aucun utilisateur trouvé</p>}
                 </div>
               )}
@@ -164,7 +188,7 @@ export default function AdminDashboard() {
                       <div className="flex items-start gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold text-gray-900">{pay.profile?.companyName}</p>
+                            <p className="font-semibold text-gray-900">{pay.user?.profile?.companyName || pay.profile?.companyName}</p>
                             <span className={clsx('px-2 py-0.5 text-xs font-medium rounded-full',
                               pay.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : pay.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')}>
                               {pay.status === 'pending' ? 'En attente' : pay.status === 'approved' ? 'Approuvé' : 'Refusé'}

@@ -7,6 +7,24 @@ import { CreateOfferDto } from './dto/create-offer.dto';
 export class OffersService {
   constructor(private prisma: PrismaService) {}
 
+  private async ensureSupplierSubscriptionApproved(supplierId: string) {
+    const activeSubscription = await this.prisma.subscriptionPayment.findFirst({
+      where: {
+        userId: supplierId,
+        status: 'approved',
+        isActive: true,
+        subscriptionEnd: { gte: new Date() },
+      },
+      select: { id: true },
+    });
+
+    if (!activeSubscription) {
+      throw new ForbiddenException(
+        "Action non autorisee. Votre paiement d'abonnement doit etre approuve avant de publier ou modifier du contenu.",
+      );
+    }
+  }
+
   // All active offers for pharmacists (single JOIN query, no N+1)
   async findAll(search?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
@@ -85,6 +103,7 @@ export class OffersService {
   }
 
   async create(supplierId: string, dto: CreateOfferDto, imageUrl?: string, fileUrl?: string) {
+    await this.ensureSupplierSubscriptionApproved(supplierId);
     return this.prisma.offer.create({
       data: {
         supplierId,
@@ -105,6 +124,7 @@ export class OffersService {
   }
 
   async delete(id: string, supplierId: string) {
+    await this.ensureSupplierSubscriptionApproved(supplierId);
     const offer = await this.prisma.offer.findUnique({ where: { id } });
     if (!offer) throw new NotFoundException('Offre introuvable');
     if (offer.supplierId !== supplierId) throw new ForbiddenException('Non autorisé');

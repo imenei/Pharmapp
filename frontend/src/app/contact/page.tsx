@@ -33,8 +33,8 @@ export default function ContactPage() {
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">💊</span>
-            <span className="text-xl font-bold text-[#2E7D32]">ELSAIDALIYA</span>
+            
+            <span className="text-xl font-bold text-[#2E7D32]">PHARMA FLOW</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
             <Link href="/" className="text-gray-700 hover:text-[#2E7D32] transition-colors">Accueil</Link>

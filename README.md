@@ -150,7 +150,8 @@ docker-compose up --build
 Email    : admin@elsaidalya.dz
 Password : Admin@123456
 ```
-
+Khemissisonia08@gmail.com
+Ned@'0820
 ---
 
 ## 💻 Développement local

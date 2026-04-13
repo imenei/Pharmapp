@@ -2,6 +2,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { sendApprovalEmail } from './mail.service'; // 👈 ajout
 
 @Injectable()
 export class AdminService {
@@ -42,10 +43,7 @@ export class AdminService {
     }
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
+        where, skip, take: limit, orderBy: { createdAt: 'desc' },
         select: {
           id: true, email: true, role: true, status: true, isActive: true, createdAt: true,
           profile: {
@@ -70,14 +68,29 @@ export class AdminService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: { status: 'approved' },
-      select: { email: true, role: true },
+      select: {
+        email: true,
+        role: true,
+        profile: { select: { companyName: true } }, // 👈 récupère le nom
+      },
     });
+
+    // Notification in-app
     await this.notifications.create(
       userId,
       'Compte approuvé ✅',
       'Votre compte a été approuvé. Vous pouvez maintenant vous connecter.',
       'success',
     );
+
+    // Email 👇
+    try {
+      await sendApprovalEmail(user.email, user.profile?.companyName ?? undefined);
+    } catch (err) {
+      console.error('Erreur envoi email approbation:', err);
+      // Ne bloque pas la réponse si l'email échoue
+    }
+
     return { message: 'Utilisateur approuvé', user };
   }
 
@@ -86,7 +99,7 @@ export class AdminService {
     await this.notifications.create(
       userId,
       'Compte refusé',
-      reason || 'Votre demande d\'inscription a été refusée.',
+      reason || "Votre demande d'inscription a été refusée.",
       'error',
     );
     return { message: 'Utilisateur refusé' };
@@ -112,13 +125,9 @@ export class AdminService {
     const skip = (page - 1) * limit;
     const where: any = {};
     if (status) where.status = status;
-
     const [payments, total] = await Promise.all([
       this.prisma.subscriptionPayment.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
+        where, skip, take: limit, orderBy: { createdAt: 'desc' },
         include: {
           profile: { select: { companyName: true, user: { select: { email: true } } } },
           subscriptionPlan: { select: { name: true, tier: true, price: true, durationDays: true } },
@@ -167,7 +176,7 @@ export class AdminService {
     await this.notifications.create(
       payment.userId,
       'Paiement refusé',
-      reason || 'Votre preuve de paiement a été refusée. Veuillez recontacter l\'administrateur.',
+      reason || "Votre preuve de paiement a été refusée. Veuillez recontacter l'administrateur.",
       'error',
     );
     return payment;

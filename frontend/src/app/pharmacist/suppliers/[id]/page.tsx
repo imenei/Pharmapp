@@ -23,10 +23,24 @@ export default function SupplierDetailPage() {
   const scores = supplier.ratingsReceived?.map((r: any) => r.score) ?? [];
   const avg = scores.length ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
 
-  const handleDownload = async (listingId: string, fileUrl: string) => {
-    await api.post(`/listings/${listingId}/download`);
+  const resolveFileUrl = (fileUrl?: string) => {
+    if (!fileUrl) return null;
+    if (/^https?:\/\//i.test(fileUrl)) return fileUrl;
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const assetBase = apiBase.replace(/\/api$/, '');
+    return fileUrl.startsWith('/') ? `${assetBase}${fileUrl}` : `${assetBase}/${fileUrl}`;
+  };
+
+  const handleDownload = async (listingId: string, fileUrl?: string) => {
+    const { data } = await api.post(`/listings/${listingId}/download`);
+    const resolvedFileUrl = resolveFileUrl(data?.fileUrl ?? fileUrl);
+    if (!resolvedFileUrl) {
+      alert("Le fichier de ce catalogue est introuvable.");
+      return;
+    }
+
     const a = document.createElement('a');
-    a.href = fileUrl.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${fileUrl}` : fileUrl;
+    a.href = resolvedFileUrl;
     a.download = '';
     a.click();
   };

@@ -1,13 +1,15 @@
 'use client';
-// src/app/page.tsx — Landing page publique El Saidaliya
-import { useState, useEffect } from 'react';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/providers';
 import { getDashboardPath } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
 interface GoldSupplier { id: string; companyName: string; wilaya?: string; description?: string; avatarUrl?: string; }
+
+type Tab = 'pharmacist' | 'supplier';
 
 // ── SVG Icons ──────────────────────────────────────────────────────────────
 const Icons = {
@@ -130,23 +132,42 @@ const Icons = {
   ),
 };
 
-export default function LandingPage() {
+// ── LogoMark Component ──────────────────────────────────────────────────────
+const LogoMark = () => (
+  <div className="w-8 h-8 text-[#2E7D32]">
+    <Icons.Pill />
+  </div>
+);
+
+export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [tab, setTab] = useState<'pharmacist' | 'supplier'>('pharmacist');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('pharmacist');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [goldSuppliers, setGoldSuppliers] = useState<GoldSupplier[]>([]);
-  const [suppLoading, setSuppLoading] = useState(true);
+  const [suppliersLoading, setSuppliersLoading] = useState(true);
 
   useEffect(() => {
     if (!loading && user) {
       if (user.status === 'approved' || user.role === 'admin') router.replace(getDashboardPath(user.role));
       else router.replace('/waiting-approval');
     }
-  }, [user, loading, router]);
+  }, [loading, router, user]);
 
   useEffect(() => {
-    api.get('/suppliers/gold').then(r => setGoldSuppliers(r.data)).catch(() => {}).finally(() => setSuppLoading(false));
+    async function fetchGoldSuppliers() {
+      try {
+        const response = await api.get('/suppliers/gold');
+        setGoldSuppliers(response.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des fournisseurs premium:', error);
+        setGoldSuppliers([]);
+      } finally {
+        setSuppliersLoading(false);
+      }
+    }
+
+    fetchGoldSuppliers();
   }, []);
 
   if (loading || user) return null;
@@ -167,49 +188,52 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
+     {/* HEADER */}
+<header className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
+  <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex justify-between items-center h-16">
+      <Link href="/" className="flex items-center gap-2">
+        <img 
+          src="/logo1.png" 
+          alt="PHARMA FLOW" 
+          className="h-8 w-auto object-contain"
+        />
+        <span className="text-xl font-bold text-[#2E7D32]">
+          PHARMA FLOW
+        </span>
+      </Link>
 
-      {/* HEADER */}
-      <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 text-[#2E7D32]">
-                <Icons.Pill />
-              </div>
-              <span className="text-lg font-bold tracking-tight text-gray-900">ELSAIDALIYA</span>
-            </div>
+      <button className="md:hidden p-2 text-gray-600" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        {isMenuOpen ? <Icons.Close /> : <Icons.Menu />}
+      </button>
 
-            <button className="md:hidden p-2 text-gray-600" onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <Icons.Close /> : <Icons.Menu />}
-            </button>
+      <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+        <a href="#features" className="text-gray-600 hover:text-[#2E7D32] transition-colors">Fonctionnalités</a>
+        <a href="#pricing" className="text-gray-600 hover:text-[#2E7D32] transition-colors">Abonnements</a>
+        <a href="#about" className="text-gray-600 hover:text-[#2E7D32] transition-colors">À propos</a>
+        <Link href="/contact" className="text-gray-600 hover:text-[#2E7D32] transition-colors">Contact</Link>
+        <Link href="/auth/signin" className="bg-[#2E7D32] text-white px-4 py-2 rounded-lg hover:bg-[#1B5E20] transition-colors text-sm font-medium">
+          Se connecter
+        </Link>
+      </nav>
+    </div>
 
-            <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-              <a href="#features" className="text-gray-600 hover:text-[#2E7D32] transition-colors">Fonctionnalités</a>
-              <a href="#pricing" className="text-gray-600 hover:text-[#2E7D32] transition-colors">Abonnements</a>
-              <a href="#about" className="text-gray-600 hover:text-[#2E7D32] transition-colors">À propos</a>
-              <Link href="/contact" className="text-gray-600 hover:text-[#2E7D32] transition-colors">Contact</Link>
-              <Link href="/auth/signin" className="bg-[#2E7D32] text-white px-4 py-2 rounded-lg hover:bg-[#1B5E20] transition-colors text-sm font-medium">
-                Se connecter
-              </Link>
-            </nav>
+    {isMenuOpen && (
+      <div className="md:hidden py-4 border-t border-gray-100">
+        <div className="flex flex-col gap-3">
+          {[['#features', 'Fonctionnalités'], ['#pricing', 'Abonnements'], ['#about', 'À propos']].map(([href, label]) => (
+            <a key={href} href={href} onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#2E7D32] py-1.5 text-sm font-medium">{label}</a>
+          ))}
+          <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#2E7D32] py-1.5 text-sm font-medium">Contact</Link>
+          <div className="border-t border-gray-100 pt-3 flex flex-col gap-2">
+            <Link href="/auth/signin" onClick={() => setIsMenuOpen(false)} className="bg-[#2E7D32] text-white px-4 py-2.5 rounded-lg text-sm font-medium text-center">Se connecter</Link>
+            <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)} className="border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium text-center">S&apos;inscrire</Link>
           </div>
-
-          {menuOpen && (
-            <div className="md:hidden py-4 border-t border-gray-100">
-              <div className="flex flex-col gap-3">
-                {[['#features', 'Fonctionnalités'], ['#pricing', 'Abonnements'], ['#about', 'À propos']].map(([href, label]) => (
-                  <a key={href} href={href} onClick={() => setMenuOpen(false)} className="text-gray-600 hover:text-[#2E7D32] py-1.5 text-sm font-medium">{label}</a>
-                ))}
-                <Link href="/contact" onClick={() => setMenuOpen(false)} className="text-gray-600 hover:text-[#2E7D32] py-1.5 text-sm font-medium">Contact</Link>
-                <div className="border-t border-gray-100 pt-3 flex flex-col gap-2">
-                  <Link href="/auth/signin" onClick={() => setMenuOpen(false)} className="bg-[#2E7D32] text-white px-4 py-2.5 rounded-lg text-sm font-medium text-center">Se connecter</Link>
-                  <Link href="/auth/signup" onClick={() => setMenuOpen(false)} className="border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium text-center">S&apos;inscrire</Link>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      </header>
+      </div>
+    )}
+  </div>
+</header>
 
       {/* HERO - avec padding bottom réduit pour coller à la bande */}
       <section className="bg-[#F0F7F0] border-b border-gray-100 relative overflow-hidden">
@@ -224,20 +248,15 @@ export default function LandingPage() {
           <div className="absolute bottom-[8%] right-[6%] w-56 h-56 rounded-full bg-[#C8E6C9] opacity-30 animate-pulse"
                style={{ animationDuration: '10s', animationDelay: '2s' }}/>
           
-          <div className="absolute bottom-[25%] left-[3%] w-36 h-36 rounded-full bg-[#A5D6A7] opacity-25"
-               style={{ animation: 'float 15s ease-in-out infinite' }}/>
+          <div className="absolute bottom-[25%] left-[3%] w-36 h-36 rounded-full bg-[#A5D6A7] opacity-25 animate-float1"/>
           
-          <div className="absolute top-[5%] left-[42%] w-24 h-24 rounded-full bg-[#C8E6C9] opacity-35"
-               style={{ animation: 'slowSpin 20s linear infinite' }}/>
+          <div className="absolute top-[5%] left-[42%] w-24 h-24 rounded-full bg-[#C8E6C9] opacity-35 animate-float2"/>
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-0 md:pt-28 md:pb-0 relative z-10">
           <div className="flex flex-col md:flex-row items-end gap-16">
             <div className="md:w-1/2 pb-12 md:pb-16">
-              <div className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#2E7D32] text-xs font-semibold px-3 py-1.5 rounded-full mb-6 border border-[#C8E6C9]">
-                <div className="w-1.5 h-1.5 bg-[#2E7D32] rounded-full animate-pulse" />
-                Plateforme pharmaceutique algérienne
-              </div>
+              
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-5 leading-[1.15] tracking-tight">
                 Approvisionnement <span className="text-[#2E7D32]">pharmaceutique</span> simplifié
               </h1>
@@ -269,36 +288,21 @@ export default function LandingPage() {
       </section>
 
       {/* STATS BAR */}
-      <section className="bg-[#2E7D32] py-8 relative z-20">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="grid grid-cols-3 divide-x divide-green-600">
-            {[
-              { n: '2 400+', l: 'Pharmaciens inscrits' },
-              { n: '350+', l: 'Fournisseurs actifs' },
-              { n: '48', l: 'Wilayas couvertes' },
-            ].map(({ n, l }) => (
-              <div key={l} className="text-center px-4">
-                <div className="text-2xl font-bold text-white">{n}</div>
-                <div className="text-green-200 text-xs mt-1">{l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+     
 
       {/* FEATURES */}
       <section id="features" className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Fonctionnalités adaptées à vos besoins</h2>
-            <p className="text-gray-500 max-w-xl mx-auto text-sm">Découvrez comment ELSAIDALIYA transforme l&apos;approvisionnement pharmaceutique en Algérie</p>
+            <p className="text-gray-500 max-w-xl mx-auto text-sm">Découvrez comment PHARMA FLOW transforme l&apos;approvisionnement pharmaceutique en Algérie</p>
           </div>
 
           <div className="flex justify-center mb-10">
             <div className="bg-gray-100 p-1 rounded-lg inline-flex">
               {(['pharmacist', 'supplier'] as const).map(t => (
-                <button key={t} onClick={() => setTab(t)}
-                  className={`px-6 py-2.5 rounded-md text-sm font-medium transition-all ${tab === t ? 'bg-white text-[#2E7D32] shadow-sm font-semibold' : 'text-gray-500 hover:text-gray-700'}`}>
+                <button key={t} onClick={() => setActiveTab(t)}
+                  className={`px-6 py-2.5 rounded-md text-sm font-medium transition-all ${activeTab === t ? 'bg-white text-[#2E7D32] shadow-sm font-semibold' : 'text-gray-500 hover:text-gray-700'}`}>
                   {t === 'pharmacist' ? 'Pharmaciens' : 'Fournisseurs'}
                 </button>
               ))}
@@ -306,7 +310,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            {(tab === 'pharmacist' ? pharmacistFeatures : supplierFeatures).map(({ icon, t, d }) => (
+            {(activeTab === 'pharmacist' ? pharmacistFeatures : supplierFeatures).map(({ icon, t, d }) => (
               <div key={t} className="flex items-start gap-4 p-5 rounded-xl border border-gray-100 hover:border-[#A5D6A7] hover:bg-[#F9FDF9] transition-all group">
                 <div className="w-10 h-10 bg-[#E8F5E9] text-[#2E7D32] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[#2E7D32] group-hover:text-white transition-colors">
                   <div className="w-5 h-5">{icon}</div>
@@ -333,7 +337,7 @@ export default function LandingPage() {
             <p className="text-gray-500 text-sm">Les fournisseurs les plus fiables de la plateforme</p>
           </div>
 
-          {suppLoading ? (
+          {suppliersLoading ? (
             <div className="flex justify-center py-16">
               <div className="w-8 h-8 border-2 border-[#2E7D32] border-t-transparent rounded-full animate-spin" />
             </div>
@@ -379,11 +383,11 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Abonnements adaptés à votre activité</h2>
-            <p className="text-gray-500 text-sm">Choisissez le plan qui correspond à vos besoins</p>
+      <section id="pricing" className="bg-gradient-to-br from-white to-green-50 py-16">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Des abonnements adaptés à votre activité</h2>
+            <p className="mx-auto max-w-2xl text-gray-600">Choisissez le plan qui correspond à vos besoins et développez votre activité.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -457,13 +461,14 @@ export default function LandingPage() {
       </section>
 
       {/* ABOUT */}
-      <section id="about" className="py-20 bg-gray-50 border-t border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Pourquoi choisir Elsaidaliya ?</h2>
-            <p className="text-gray-500 text-sm">Une plateforme conçue pour le marché pharmaceutique algérien</p>
+      <section id="about" className="bg-white py-16">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Pourquoi choisir PHARMA FLOW ?</h2>
+            <p className="mx-auto max-w-2xl text-gray-600">Une plateforme conçue spécifiquement pour le marché pharmaceutique algérien.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+
+          <div className="grid gap-8 md:grid-cols-3">
             {[
               { icon: <Icons.Shield />, t: 'Sécurisé', d: 'Authentification multi-niveaux et données cryptées pour protéger votre activité.' },
               { icon: <Icons.Zap />, t: 'Rapide', d: 'Interface optimisée pour une expérience fluide et réactive sur tous vos appareils.' },
@@ -503,10 +508,14 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 text-[#2E7D32]"><Icons.Pill /></div>
-                <span className="font-bold text-gray-900 tracking-tight">ELSAIDALIYA</span>
+              <img 
+          src="/logo1.png" 
+          alt="PHARMA FLOW" 
+          className="h-8 w-auto object-contain"
+        />
+                <span className="font-bold text-gray-900 tracking-tigt">PHARMA FLOW</span>
               </div>
-              <p className="text-gray-400 text-xs leading-relaxed">Le trait d&apos;union entre pharmacien et fournisseur en Algérie.</p>
+              <p className="text-sm text-gray-600">Le trait d&apos;union entre pharmacien et fournisseur.</p>
             </div>
             <div>
               <h4 className="text-xs font-bold text-gray-900 mb-3 uppercase tracking-wider">Plateforme</h4>
@@ -525,28 +534,28 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-gray-900 mb-3 uppercase tracking-wider">Légal</h4>
-              <ul className="space-y-2 text-xs text-gray-400">
-                <li><Link href="/legal" className="hover:text-[#2E7D32] transition-colors">Conditions d&apos;utilisation</Link></li>
-                <li><Link href="/legal" className="hover:text-[#2E7D32] transition-colors">Confidentialité</Link></li>
+              <h4 className="mb-4 text-sm font-semibold text-gray-900">Accès</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><Link href="/auth/signin" className="transition hover:text-green-600">Connexion</Link></li>
+                <li><Link href="/auth/signup" className="transition hover:text-green-600">Inscription</Link></li>
               </ul>
             </div>
           </div>
           <div className="pt-6 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-2">
-            <p className="text-xs text-gray-300">© 2026 Elsaidaliya. Tous droits réservés.</p>
-            <p className="text-xs text-gray-300">Fait avec soin pour le marché pharmaceutique algérien</p>
+            <p className="text-xs text-gray-300">© 2026 PHARMA FLOW. Tous droits réservés.</p>
+            
           </div>
         </div>
       </footer>
 
       <style jsx>{`
-        @keyframes float {
+        @keyframes float1 {
           0%, 100% { transform: translateY(0px) translateX(0px); }
           50% { transform: translateY(-15px) translateX(5px); }
         }
-        @keyframes slowSpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes float2 {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>
