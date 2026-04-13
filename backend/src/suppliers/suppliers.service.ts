@@ -101,7 +101,7 @@ export class SuppliersService {
         listings: {
           orderBy: { createdAt: 'desc' },
           take: 10,
-          select: { id: true, title: true, views: true, downloads: true, createdAt: true },
+          select: { id: true, title: true, fileUrl: true, views: true, downloads: true, createdAt: true },
         },
         offers: {
           where: { expiresAt: { gte: new Date() } },
