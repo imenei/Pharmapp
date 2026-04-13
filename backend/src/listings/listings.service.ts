@@ -3,14 +3,20 @@ import {
   Injectable, NotFoundException, ForbiddenException,
   BadRequestException, Logger,
 } from '@nestjs/common';
+import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class ListingsService {
   private readonly logger = new Logger(ListingsService.name);
-  constructor(private prisma: PrismaService) {}
+
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   private async ensureSupplierSubscriptionApproved(supplierId: string) {
     const activeSubscription = await this.prisma.subscriptionPayment.findFirst({
@@ -30,7 +36,20 @@ export class ListingsService {
     }
   }
 
-  // ── Upload PDF + extract products ──────────────────────────────────────────
+  private async hasActiveGoldSubscription(supplierId: string): Promise<boolean> {
+    const payment = await this.prisma.subscriptionPayment.findFirst({
+      where: {
+        userId: supplierId,
+        status: 'approved',
+        isActive: true,
+        subscriptionStart: { lte: new Date() },
+        subscriptionEnd: { gte: new Date() },
+        subscriptionPlan: { tier: 'gold' },
+      },
+    });
+    return !!payment;
+  }
+
   async create(supplierId: string, title: string, description: string, file: Express.Multer.File) {
     await this.ensureSupplierSubscriptionApproved(supplierId);
     if (!file) throw new BadRequestException('Fichier PDF requis');
@@ -41,7 +60,6 @@ export class ListingsService {
     let extractedText = '';
 
     try {
-      // Use require() not import() - avoids ESM issues with pdf-parse
       const pdfParse = require('pdf-parse');
       const buffer = fs.readFileSync(file.path);
       const data = await pdfParse(buffer, { max: 0 });
@@ -51,7 +69,6 @@ export class ListingsService {
       this.logger.log(`Products extracted: ${products.length}`);
     } catch (e) {
       this.logger.error(`PDF extraction failed: ${e.message}`);
-      // Continue - save listing without products
     }
 
     const listing = await this.prisma.$transaction(async (tx) => {
@@ -78,6 +95,22 @@ export class ListingsService {
       return l;
     });
 
+    // 🔔 Notifier tous les pharmaciens si le fournisseur est Gold
+    const isGold = await this.hasActiveGoldSubscription(supplierId);
+    if (isGold) {
+      const profile = await this.prisma.profile.findUnique({
+        where: { id: supplierId },
+        select: { companyName: true },
+      });
+      const supplierName = profile?.companyName ?? 'Un fournisseur';
+
+      await this.notificationsService.notifyAllPharmacists(
+        '📋 Nouveau catalogue disponible',
+        `${supplierName} vient de publier un nouveau catalogue : "${listing.title}"`,
+        NotificationType.listing,
+      );
+    }
+
     return {
       id: listing.id,
       title: listing.title,
@@ -89,7 +122,6 @@ export class ListingsService {
     };
   }
 
-  // ── Smart extraction for Algerian pharma PDFs ──────────────────────────────
   private extractProducts(text: string): { productName: string; price?: number; quantity?: number }[] {
     if (!text || text.trim().length < 10) return [];
 
@@ -102,7 +134,6 @@ export class ListingsService {
       .map((l) => l.replace(/\s+/g, ' ').trim())
       .filter((l) => l.length >= 3);
 
-    // Lines to skip (headers, footers, metadata)
     const SKIP = /^(page\s*\d|total|sous-total|tva|ttc|remise|réduction|date|fax|tél|tel\b|email|adresse|www\.|http|©|ref\s*:|n°|bon\s*de|facture|commande|livraison|devis|catalogue|liste\s*de|fournisseur|pharmacie\s*centrale|client|société|sarl|eurl|wilaya|siret|nif\b|nis\b|^rc\b|article\s*n°|designation|désignation|description|quantité|prix\s*unit|montant|total\s*ht|observations?)/i;
 
     const PRICE_RE = /\b(\d{2,7}[.,]\d{2})\s*(da|dzd|dz)?\s*$/i;
@@ -112,11 +143,10 @@ export class ListingsService {
 
     for (const line of lines) {
       if (SKIP.test(line)) continue;
-      if (/^\d+$/.test(line)) continue;           // pure number
-      if (/^[\d\s\.,\-]+$/.test(line)) continue;  // pure numbers/punctuation
-      if (line.length > 120) continue;             // too long = paragraph text
+      if (/^\d+$/.test(line)) continue;
+      if (/^[\d\s\.,\-]+$/.test(line)) continue;
+      if (line.length > 120) continue;
 
-      // Extract price
       let price: number | undefined;
       const pm = line.match(PRICE_RE);
       if (pm) {
@@ -124,25 +154,19 @@ export class ListingsService {
         if (v > 0 && v < 9_999_999) price = v;
       }
 
-      // Extract quantity
       let quantity: number | undefined;
       const qm = line.match(QTY_RE);
       if (qm) quantity = parseInt(qm[1], 10);
 
-      // Clean line to get product name
       let name = line
         .replace(PRICE_RE, '')
-        .replace(/\b\d{5,}\b/g, '')  // strip long codes
+        .replace(/\b\d{5,}\b/g, '')
         .replace(/[:\-\|;]+$/, '')
         .replace(/\s{2,}/g, ' ')
         .trim();
 
       if (name.length < 3 || name.length > 100) continue;
-
-      // Must be valid name OR have dosage info
       if (!NAME_RE.test(name) && !DOSAGE_RE.test(name)) continue;
-
-      // Skip ALL-CAPS section headers (> 30 chars)
       if (name === name.toUpperCase() && name.length > 30 && !/\d/.test(name)) continue;
 
       const key = name.toLowerCase().trim();
@@ -156,7 +180,6 @@ export class ListingsService {
     return products;
   }
 
-  // ── Search by product names ────────────────────────────────────────────────
   async searchByProducts(productNames: string[], page = 1, limit = 20) {
     const valid = (productNames || []).map((n) => n?.trim()).filter((n) => n && n.length >= 2);
     if (!valid.length) return { data: [], total: 0, page, limit, totalPages: 0 };

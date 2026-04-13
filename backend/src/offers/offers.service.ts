@@ -1,11 +1,16 @@
 // src/offers/offers.service.ts
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 
 @Injectable()
 export class OffersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   private async ensureSupplierSubscriptionApproved(supplierId: string) {
     const activeSubscription = await this.prisma.subscriptionPayment.findFirst({
@@ -25,7 +30,20 @@ export class OffersService {
     }
   }
 
-  // All active offers for pharmacists (single JOIN query, no N+1)
+  private async hasActiveGoldSubscription(supplierId: string): Promise<boolean> {
+    const payment = await this.prisma.subscriptionPayment.findFirst({
+      where: {
+        userId: supplierId,
+        status: 'approved',
+        isActive: true,
+        subscriptionStart: { lte: new Date() },
+        subscriptionEnd: { gte: new Date() },
+        subscriptionPlan: { tier: 'gold' },
+      },
+    });
+    return !!payment;
+  }
+
   async findAll(search?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const now = new Date();
@@ -47,7 +65,6 @@ export class OffersService {
         skip,
         take: limit,
         orderBy: [
-          // Gold suppliers first
           { supplier: { subscriptionPayments: { _count: 'desc' } } },
           { createdAt: 'desc' },
         ],
@@ -94,7 +111,6 @@ export class OffersService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  // Supplier's own offers
   async findBySupplierId(supplierId: string) {
     return this.prisma.offer.findMany({
       where: { supplierId },
@@ -104,7 +120,8 @@ export class OffersService {
 
   async create(supplierId: string, dto: CreateOfferDto, imageUrl?: string, fileUrl?: string) {
     await this.ensureSupplierSubscriptionApproved(supplierId);
-    return this.prisma.offer.create({
+
+    const offer = await this.prisma.offer.create({
       data: {
         supplierId,
         title: dto.title,
@@ -114,6 +131,24 @@ export class OffersService {
         expiresAt: new Date(dto.expiresAt),
       },
     });
+
+    // 🔔 Notifier tous les pharmaciens si le fournisseur est Gold
+    const isGold = await this.hasActiveGoldSubscription(supplierId);
+    if (isGold) {
+      const profile = await this.prisma.profile.findUnique({
+        where: { id: supplierId },
+        select: { companyName: true },
+      });
+      const supplierName = profile?.companyName ?? 'Un fournisseur';
+
+      await this.notificationsService.notifyAllPharmacists(
+        '🎁 Nouvelle offre disponible',
+        `${supplierName} vient de publier une nouvelle offre : "${offer.title}"`,
+        NotificationType.offer,
+      );
+    }
+
+    return offer;
   }
 
   async incrementView(id: string) {

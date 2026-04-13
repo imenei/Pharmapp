@@ -1,10 +1,10 @@
 'use client';
 // src/app/pharmacist/suppliers/page.tsx
 import { useState } from 'react';
-import { Search, MapPin, Star, Package, Gift } from 'lucide-react';
+import { Search, MapPin, Package, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { useSuppliers, useWilayas } from '@/hooks/useApi';
-import { Avatar, TierBadge, Stars, CardSkeleton, Empty, Pagination } from '@/components/ui';
+import { Avatar, Stars, CardSkeleton, Empty, Pagination } from '@/components/ui';
 
 export default function SuppliersPage() {
   const [search, setSearch] = useState('');
@@ -65,7 +65,7 @@ export default function SuppliersPage() {
                       <MapPin size={12} /><span className="truncate">{supplier.wilaya}</span>
                     </div>
                   </div>
-                  <TierBadge tier={supplier.subscriptionTier} />
+                  {/* TierBadge supprimé */}
                 </div>
 
                 {supplier.description && (

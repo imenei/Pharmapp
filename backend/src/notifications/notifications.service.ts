@@ -1,5 +1,6 @@
 // src/notifications/notifications.service.ts
 import { Injectable } from '@nestjs/common';
+import { NotificationType } from '@prisma/client'; // ← ajouter cet import
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -39,16 +40,41 @@ export class NotificationsService {
     return { message: 'Notification supprimée' };
   }
 
-  // Called internally by admin/system
-  async create(userId: string, title: string, message: string, type = 'info') {
+  async create(userId: string, title: string, message: string, type: NotificationType = NotificationType.info) {
     return this.prisma.notification.create({
-      data: { userId, title, message, type: type as any },
+      data: { userId, title, message, type },
     });
   }
 
-  async createBulk(userIds: string[], title: string, message: string, type = 'info') {
+  async createBulk(userIds: string[], title: string, message: string, type: NotificationType = NotificationType.info) {
     return this.prisma.notification.createMany({
-      data: userIds.map((userId) => ({ userId, title, message, type: type as any })),
+      data: userIds.map((userId) => ({ userId, title, message, type })),
+    });
+  }
+
+  async notifyAllPharmacists(
+    title: string,
+    message: string,
+    type: NotificationType = NotificationType.info,
+  ): Promise<void> {
+    const pharmacists = await this.prisma.user.findMany({ // ← this.prisma, pas le paramètre
+      where: {
+        role: 'pharmacist',
+        status: 'approved',
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    if (pharmacists.length === 0) return;
+
+    await this.prisma.notification.createMany({
+      data: pharmacists.map((p) => ({
+        userId: p.id,
+        title,
+        message,
+        type,
+      })),
     });
   }
 }
