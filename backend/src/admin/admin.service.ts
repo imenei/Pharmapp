@@ -51,6 +51,7 @@ export class AdminService {
           profile: {
             select: {
               companyName: true, wilaya: true, phone: true, avatarUrl: true,
+              registerUrl: true, // ← ajouté
               subscriptionPayments: {
                 where: { status: 'approved', isActive: true },
                 select: { subscriptionPlan: { select: { name: true, tier: true } }, subscriptionEnd: true },
@@ -139,7 +140,6 @@ export class AdminService {
     const end = new Date();
     end.setDate(end.getDate() + payment.subscriptionPlan.durationDays);
 
-    // Deactivate old subscriptions first
     await this.prisma.subscriptionPayment.updateMany({
       where: { userId: payment.userId, isActive: true },
       data: { isActive: false },

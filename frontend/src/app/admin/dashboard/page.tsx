@@ -1,7 +1,7 @@
 'use client';
 // src/app/admin/dashboard/page.tsx
 import { useState } from 'react';
-import { Users, CreditCard, MessageSquare, Activity, Check, X, Eye, Trash2 } from 'lucide-react';
+import { Users, CreditCard, MessageSquare, Activity, Check, X, Eye, Trash2, FileText } from 'lucide-react';
 import { useAdminStats, useAdminUsers, useAdminPayments, useAdminMessages,
   useApproveUser, useRejectUser, useApprovePayment, useRejectPayment,
   useDeleteUser, useToggleUserActive, useMarkMessageRead } from '@/hooks/useApi';
@@ -89,9 +89,22 @@ export default function AdminDashboard() {
                     <div key={user.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                       <Avatar src={user.profile?.avatarUrl} name={user.profile?.companyName ?? user.email} size={44}/>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">{user.profile?.companyName ?? user.email}</p>
-                        <p className="text-sm text-gray-500">{user.email} · {user.wilaya}</p>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-gray-900 truncate">{user.profile?.companyName ?? user.email}</p>
+                          {/* Bouton registre de commerce */}
+                          {user.profile?.registerUrl && (
+                            <a
+                              href={`${API_BASE}${user.profile.registerUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-[#E8F5E9] text-[#2E7D32] rounded-lg hover:bg-[#2E7D32] hover:text-white transition-colors"
+                            >
+                              <FileText size={11}/> Registre
+                            </a>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">{user.email} · {user.profile?.wilaya}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className={clsx('px-2 py-0.5 text-xs font-medium rounded-full',
                             user.role === 'pharmacist' ? 'bg-blue-100 text-blue-700' : user.role === 'supplier' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700')}>
                             {user.role}

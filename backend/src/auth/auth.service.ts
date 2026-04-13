@@ -1,7 +1,6 @@
 // src/auth/auth.service.ts
 import {
-  Injectable, UnauthorizedException, ConflictException,
-  BadRequestException, NotFoundException,
+  Injectable, UnauthorizedException, ConflictException, NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +16,7 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
+  // ── Validate credentials (used by LocalStrategy) ──────────────────────────
   async validateUser(email: string, password: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('Email ou mot de passe incorrect');
@@ -26,15 +26,16 @@ export class AuthService {
     return user;
   }
 
+  // ── Login — returns tokens + user info ────────────────────────────────────
   async login(user: any) {
     const payload = { sub: user.id, email: user.email, role: user.role };
+
     const accessToken = this.jwt.sign(payload);
     const refreshToken = this.jwt.sign(payload, {
       secret: this.config.get('JWT_REFRESH_SECRET'),
       expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN', '7d'),
     });
 
-    // Store refresh token
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
     await this.prisma.refreshToken.create({
@@ -53,6 +54,7 @@ export class AuthService {
     };
   }
 
+  // ── Register — creates user + profile with optional registerUrl ───────────
   async register(dto: RegisterDto) {
     // Check email uniqueness
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
@@ -72,14 +74,19 @@ export class AuthService {
             wilaya: dto.wilaya,
             phone: dto.phone,
             address: dto.address,
+            registerUrl: dto.registerUrl ?? null, // ← registre de commerce
           },
         },
       },
     });
 
-    return { message: 'Compte créé avec succès. En attente d\'approbation.', userId: user.id };
+    return {
+      message: 'Compte créé avec succès. En attente de vérification par un administrateur.',
+      userId: user.id,
+    };
   }
 
+  // ── Refresh tokens ────────────────────────────────────────────────────────
   async refreshTokens(token: string) {
     const record = await this.prisma.refreshToken.findUnique({ where: { token } });
     if (!record || record.expiresAt < new Date()) {
@@ -88,16 +95,17 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: record.userId } });
     if (!user) throw new UnauthorizedException('Utilisateur introuvable');
 
-    // Rotate token
     await this.prisma.refreshToken.delete({ where: { token } });
     return this.login(user);
   }
 
+  // ── Logout ────────────────────────────────────────────────────────────────
   async logout(token: string) {
     await this.prisma.refreshToken.deleteMany({ where: { token } });
     return { message: 'Déconnecté avec succès' };
   }
 
+  // ── Get current user profile ──────────────────────────────────────────────
   async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -105,8 +113,8 @@ export class AuthService {
         id: true, email: true, role: true, status: true, isActive: true,
         profile: {
           select: {
-            companyName: true, wilaya: true, phone: true,
-            address: true, avatarUrl: true, description: true,
+            companyName: true, wilaya: true, phone: true, address: true,
+            avatarUrl: true, description: true, registerUrl: true,
           },
         },
       },

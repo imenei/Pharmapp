@@ -57,7 +57,6 @@ model User {
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  // Relations
   profile              Profile?
   notifications        Notification[]
   sentContactMessages  ContactMessage[]
@@ -67,41 +66,41 @@ model User {
 }
 
 model Profile {
-  id          String  @id // Same as User.id (1:1)
-  companyName String? @map("company_name")
-  address     String?
-  wilaya      String?
-  phone       String?
-  description String? @db.Text
-  avatarUrl   String? @map("avatar_url")
+  id            String  @id
+  companyName   String? @map("company_name")
+  address       String?
+  wilaya        String?
+  phone         String?
+  description   String? @db.Text
+  avatarUrl     String? @map("avatar_url")
+  registerUrl   String? @map("register_url")  // ← registre de commerce
 
-  // Relations
-  user               User               @relation(fields: [id], references: [id], onDelete: Cascade)
-  supplierData       SupplierData?
-  pharmacistData     PharmacistData?
-  listings           Listing[]
-  offers             Offer[]
-  ratingsGiven       Rating[]           @relation("RatingsGiven")
-  ratingsReceived    Rating[]           @relation("RatingsReceived")
+  user                 User                 @relation(fields: [id], references: [id], onDelete: Cascade)
+  supplierData         SupplierData?
+  pharmacistData       PharmacistData?
+  listings             Listing[]
+  offers               Offer[]
+  ratingsGiven         Rating[]             @relation("RatingsGiven")
+  ratingsReceived      Rating[]             @relation("RatingsReceived")
   subscriptionPayments SubscriptionPayment[]
 
   @@map("profiles")
 }
 
 model SupplierData {
-  id              String   @id @default(uuid())
-  profileId       String   @unique @map("profile_id")
-  totalViews      Int      @default(0) @map("total_views")
-  totalDownloads  Int      @default(0) @map("total_downloads")
+  id             String @id @default(uuid())
+  profileId      String @unique @map("profile_id")
+  totalViews     Int    @default(0) @map("total_views")
+  totalDownloads Int    @default(0) @map("total_downloads")
 
-  profile  Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@map("supplier_data")
 }
 
 model PharmacistData {
-  id        String @id @default(uuid())
-  profileId String @unique @map("profile_id")
+  id            String  @id @default(uuid())
+  profileId     String  @unique @map("profile_id")
   licenseNumber String? @map("license_number")
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
@@ -122,7 +121,7 @@ model SubscriptionPlan {
   id           String           @id @default(uuid())
   name         String
   tier         SubscriptionTier
-  price        Int              // Price in DZD (monthly)
+  price        Int
   yearlyPrice  Int              @map("yearly_price")
   durationDays Int              @map("duration_days")
   features     String[]
@@ -135,16 +134,16 @@ model SubscriptionPlan {
 }
 
 model SubscriptionPayment {
-  id                String        @id @default(uuid())
-  userId            String        @map("user_id")
-  subscriptionPlanId String       @map("subscription_plan_id")
-  proofUrl          String        @map("proof_url")
-  status            PaymentStatus @default(pending)
-  subscriptionStart DateTime?     @map("subscription_start")
-  subscriptionEnd   DateTime?     @map("subscription_end")
-  isActive          Boolean       @default(false) @map("is_active")
-  createdAt         DateTime      @default(now()) @map("created_at")
-  updatedAt         DateTime      @updatedAt @map("updated_at")
+  id                 String        @id @default(uuid())
+  userId             String        @map("user_id")
+  subscriptionPlanId String        @map("subscription_plan_id")
+  proofUrl           String        @map("proof_url")
+  status             PaymentStatus @default(pending)
+  subscriptionStart  DateTime?     @map("subscription_start")
+  subscriptionEnd    DateTime?     @map("subscription_end")
+  isActive           Boolean       @default(false) @map("is_active")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
 
   profile          Profile          @relation(fields: [userId], references: [id], onDelete: Cascade)
   subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
@@ -154,7 +153,7 @@ model SubscriptionPayment {
   @@map("subscription_payments")
 }
 
-// ─── Listings (Product Catalogs) ──────────────────────────────────────────────
+// ─── Listings ────────────────────────────────────────────────────────────────
 
 model Listing {
   id            String   @id @default(uuid())
@@ -168,7 +167,7 @@ model Listing {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  supplier Profile         @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  supplier Profile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   products ListingProduct[]
 
   @@index([supplierId])
@@ -187,11 +186,11 @@ model ListingProduct {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([listingId])
-  @@index([productName]) // For fast product search
+  @@index([productName])
   @@map("listing_products")
 }
 
-// ─── Offers ───────────────────────────────────────────────────────────────────
+// ─── Offers ──────────────────────────────────────────────────────────────────
 
 model Offer {
   id          String   @id @default(uuid())
@@ -211,20 +210,20 @@ model Offer {
   @@map("offers")
 }
 
-// ─── Ratings ──────────────────────────────────────────────────────────────────
+// ─── Ratings ─────────────────────────────────────────────────────────────────
 
 model Rating {
-  id          String   @id @default(uuid())
-  pharmacistId String  @map("pharmacist_id")
-  supplierId  String   @map("supplier_id")
-  score       Int      // 1-5
-  comment     String?  @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
+  id           String   @id @default(uuid())
+  pharmacistId String   @map("pharmacist_id")
+  supplierId   String   @map("supplier_id")
+  score        Int
+  comment      String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
 
-  pharmacist Profile @relation("RatingsGiven", fields: [pharmacistId], references: [id], onDelete: Cascade)
-  supplier   Profile @relation("RatingsReceived", fields: [supplierId], references: [id], onDelete: Cascade)
+  pharmacist Profile @relation("RatingsGiven",    fields: [pharmacistId], references: [id], onDelete: Cascade)
+  supplier   Profile @relation("RatingsReceived", fields: [supplierId],   references: [id], onDelete: Cascade)
 
-  @@unique([pharmacistId, supplierId]) // One rating per pharmacist per supplier
+  @@unique([pharmacistId, supplierId])
   @@index([supplierId])
   @@map("ratings")
 }
@@ -256,7 +255,7 @@ model ContactMessage {
   email     String
   subject   String
   message   String   @db.Text
-  status    String   @default("new") // new | read | replied
+  status    String   @default("new")
   createdAt DateTime @default(now()) @map("created_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
