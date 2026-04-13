@@ -74,7 +74,7 @@ model Profile {
   phone       String?
   description String? @db.Text
   avatarUrl   String? @map("avatar_url")
-
+ registerUrl String? @map("register_url")   // ← AJOUTÉ
   // Relations
   user               User               @relation(fields: [id], references: [id], onDelete: Cascade)
   supplierData       SupplierData?

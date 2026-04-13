@@ -120,11 +120,7 @@ export default function SigninPage() {
             </div>
           </div>
 
-          <div className="mt-4 bg-white/60 backdrop-blur rounded-xl p-4 text-sm text-green-800 border border-green-200">
-            <p className="font-semibold mb-1">Compte demo admin :</p>
-            <p>Email : <span className="font-mono">admin@elsaidalya.dz</span></p>
-            <p>Mot de passe : <span className="font-mono">Admin@123456</span></p>
-          </div>
+         
         </div>
       </main>
 
