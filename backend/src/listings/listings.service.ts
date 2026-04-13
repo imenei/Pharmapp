@@ -12,8 +12,27 @@ export class ListingsService {
   private readonly logger = new Logger(ListingsService.name);
   constructor(private prisma: PrismaService) {}
 
+  private async ensureSupplierSubscriptionApproved(supplierId: string) {
+    const activeSubscription = await this.prisma.subscriptionPayment.findFirst({
+      where: {
+        userId: supplierId,
+        status: 'approved',
+        isActive: true,
+        subscriptionEnd: { gte: new Date() },
+      },
+      select: { id: true },
+    });
+
+    if (!activeSubscription) {
+      throw new ForbiddenException(
+        "Action non autorisee. Votre paiement d'abonnement doit etre approuve avant de publier ou modifier du contenu.",
+      );
+    }
+  }
+
   // ── Upload PDF + extract products ──────────────────────────────────────────
   async create(supplierId: string, title: string, description: string, file: Express.Multer.File) {
+    await this.ensureSupplierSubscriptionApproved(supplierId);
     if (!file) throw new BadRequestException('Fichier PDF requis');
     if (!title?.trim()) throw new BadRequestException('Titre requis');
 
@@ -222,6 +241,7 @@ export class ListingsService {
   }
 
   async delete(id: string, supplierId: string) {
+    await this.ensureSupplierSubscriptionApproved(supplierId);
     const l = await this.prisma.listing.findUnique({ where: { id } });
     if (!l) throw new NotFoundException('Listing introuvable');
     if (l.supplierId !== supplierId) throw new ForbiddenException('Non autorisé');

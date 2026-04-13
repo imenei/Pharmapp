@@ -8,6 +8,24 @@ import { CreateRatingDto } from './dto/create-rating.dto';
 export class SuppliersService {
   constructor(private prisma: PrismaService) {}
 
+  private async ensureSupplierSubscriptionApproved(userId: string) {
+    const activeSubscription = await this.prisma.subscriptionPayment.findFirst({
+      where: {
+        userId,
+        status: 'approved',
+        isActive: true,
+        subscriptionEnd: { gte: new Date() },
+      },
+      select: { id: true },
+    });
+
+    if (!activeSubscription) {
+      throw new ForbiddenException(
+        "Action non autorisee. Votre paiement d'abonnement doit etre approuve avant de modifier votre espace fournisseur.",
+      );
+    }
+  }
+
   // ── List approved suppliers with aggregated stats (single optimized query) ──
   async findAll(wilaya?: string, search?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
@@ -132,6 +150,7 @@ export class SuppliersService {
 
   // ── Update supplier profile ────────────────────────────────────────────────
   async updateProfile(userId: string, dto: UpdateProfileDto, avatarUrl?: string) {
+    await this.ensureSupplierSubscriptionApproved(userId);
     return this.prisma.profile.update({
       where: { id: userId },
       data: {

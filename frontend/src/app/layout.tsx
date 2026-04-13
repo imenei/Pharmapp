@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -7,8 +6,8 @@ import { Providers } from '@/lib/providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'El Saidalya — Plateforme Pharma',
-  description: 'Connecter pharmaciens et fournisseurs pharmaceutiques en Algérie',
+  title: 'PHARMA FLOW - Plateforme Pharma',
+  description: 'Connecter pharmaciens et fournisseurs pharmaceutiques en Algerie',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

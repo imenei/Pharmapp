@@ -73,12 +73,7 @@ const supplierFeatures = [
 
 function LogoMark() {
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#2E7D32] shadow-sm">
-      <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.2">
-        <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-        <circle cx="12" cy="12" r="8.5" />
-      </svg>
-    </div>
+    <img src="/pharma-flow-logo.jpg" alt="PHARMA FLOW" className="h-10 w-10 rounded-2xl object-cover shadow-sm" />
   );
 }
 
@@ -139,7 +134,7 @@ export default function Home() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <LogoMark />
-            <span className="text-xl font-bold text-[#2E7D32]">ELSAIDALIYA</span>
+            <span className="text-xl font-bold text-[#2E7D32]">PHARMA FLOW</span>
           </div>
 
           <div className="md:hidden">
@@ -256,7 +251,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold text-gray-900">Des fonctionnalités adaptées à vos besoins</h2>
-            <p className="mx-auto max-w-2xl text-gray-600">Découvrez comment ELSAIDALIYA peut transformer votre activité pharmaceutique.</p>
+            <p className="mx-auto max-w-2xl text-gray-600">Découvrez comment PHARMA FLOW peut transformer votre activité pharmaceutique.</p>
           </div>
 
           <div className="mb-12 flex justify-center">
@@ -411,7 +406,7 @@ export default function Home() {
       <section id="about" className="bg-white py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-gray-900">Pourquoi choisir Elsaidaliya ?</h2>
+            <h2 className="mb-4 text-3xl font-bold text-gray-900">Pourquoi choisir PHARMA FLOW ?</h2>
             <p className="mx-auto max-w-2xl text-gray-600">Une plateforme conçue spécifiquement pour le marché pharmaceutique algérien.</p>
           </div>
 
@@ -452,7 +447,7 @@ export default function Home() {
             <div>
               <div className="mb-4 flex items-center">
                 <LogoMark />
-                <h3 className="ml-3 text-lg font-semibold text-gray-900">ELSAIDALIYA</h3>
+                <h3 className="ml-3 text-lg font-semibold text-gray-900">PHARMA FLOW</h3>
               </div>
               <p className="text-sm text-gray-600">Le trait d’union entre pharmacien et fournisseur.</p>
             </div>
@@ -468,7 +463,7 @@ export default function Home() {
               <h4 className="mb-4 text-sm font-semibold text-gray-900">Support</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li><a href="tel:+213553720952" className="transition hover:text-green-600">+213 553 720 952</a></li>
-                <li><a href="mailto:contact@elsaidaliya.com" className="transition hover:text-green-600">contact@elsaidaliya.com</a></li>
+                <li><a href="mailto:contact@pharmaflow.dz" className="transition hover:text-green-600">contact@pharmaflow.dz</a></li>
               </ul>
             </div>
             <div>
@@ -482,7 +477,7 @@ export default function Home() {
 
           <div className="mt-12 border-t border-gray-300 pt-8">
             <div className="flex flex-col items-center justify-between md:flex-row">
-              <p className="text-sm text-gray-600">© 2026 Elsaidaliya. Tous droits réservés.</p>
+              <p className="text-sm text-gray-600">© 2026 PHARMA FLOW. Tous droits réservés.</p>
             </div>
           </div>
         </div>
