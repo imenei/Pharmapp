@@ -49,6 +49,7 @@ export class AdminService {
           profile: {
             select: {
               companyName: true, wilaya: true, phone: true, avatarUrl: true,
+              registerUrl: true, // ← ajouté
               subscriptionPayments: {
                 where: { status: 'approved', isActive: true },
                 select: { subscriptionPlan: { select: { name: true, tier: true } }, subscriptionEnd: true },
