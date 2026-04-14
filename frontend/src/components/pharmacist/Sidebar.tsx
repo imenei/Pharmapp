@@ -31,7 +31,7 @@ export default function PharmacistSidebar() {
     <div className="w-64 bg-[#E8F5E9] text-gray-800 min-h-screen p-4 flex flex-col border-r border-[#A5D6A7]">
       <div className="mb-8 pt-2">
         <div className="flex items-center space-x-3">
-          <img src="/pharma-flow-logo.jpg" alt="PHARMA FLOW" className="h-11 w-11 rounded-xl object-cover shadow-sm border border-green-100" />
+          <img src="/logo3.png" alt="PHARMA FLOW" className="h-11 w-11 rounded-xl object-cover shadow-sm border border-green-100" />
           <div className="flex flex-col">
             <h1 className="text-xl font-bold text-[#2E7D32] leading-tight">PHARMA FLOW</h1>
             <span className="text-sm text-green-600 font-medium">Espace Pharmacien</span>

@@ -38,8 +38,12 @@ export default function SigninPage() {
       <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/pharma-flow-logo.jpg" alt="PHARMA FLOW" className="h-10 w-10 rounded-xl object-cover" />
-            <span className="text-2xl font-bold text-[#2E7D32]">PHARMA FLOW</span>
+            <img src="/logo3.png" alt="PHARMA FLOW" className="h-9 w-9 rounded-xl object-cover" />
+            <img 
+  src="/1 (2).png" 
+  alt="PHARMA FLOW" 
+  className="h-8 w-auto object-contain"
+/>
           </div>
           <nav className="hidden md:flex space-x-8 text-sm text-gray-600">
             <Link href="/" className="hover:text-[#2E7D32] transition-colors">Accueil</Link>
@@ -53,7 +57,7 @@ export default function SigninPage() {
           <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] p-8">
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-[#E8F5E9] rounded-2xl mb-4">
-                <img src="/pharma-flow-logo.jpg" alt="PHARMA FLOW" className="h-12 w-12 rounded-xl object-cover" />
+                <img src="/logo3.png" alt="PHARMA FLOW" className="h-12 w-12 rounded-xl object-cover" />
               </div>
               <h2 className="text-2xl font-bold text-[#2E7D32]">Connexion</h2>
               <p className="text-gray-500 text-sm mt-1">Accedez a votre espace professionnel</p>

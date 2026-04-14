@@ -192,16 +192,19 @@ export default function Home() {
 <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
   <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="flex justify-between items-center h-16">
-      <Link href="/" className="flex items-center gap-2">
-        <img 
-          src="/logo1.png" 
-          alt="PHARMA FLOW" 
-          className="h-8 w-auto object-contain"
-        />
-        <span className="text-xl font-bold text-[#2E7D32]">
-          PHARMA FLOW
-        </span>
-      </Link>
+    <Link href="/" className="flex items-center gap-2">
+  <img 
+    src="/logo1.png" 
+    alt="Logo" 
+    className="h-8 w-auto object-contain"
+  />
+
+  <img 
+    src="/1 (2).png" 
+    alt="PHARMA FLOW" 
+    className="h-8 w-auto object-contain"
+  />
+</Link>
 
       <button className="md:hidden p-2 text-gray-600" onClick={() => setIsMenuOpen(!isMenuOpen)}>
         {isMenuOpen ? <Icons.Close /> : <Icons.Menu />}
@@ -513,7 +516,11 @@ export default function Home() {
           alt="PHARMA FLOW" 
           className="h-8 w-auto object-contain"
         />
-                <span className="font-bold text-gray-900 tracking-tigt">PHARMA FLOW</span>
+                 <img 
+    src="/1 (2).png" 
+    alt="PHARMA FLOW" 
+    className="h-8 w-auto object-contain"
+  />
               </div>
               <p className="text-sm text-gray-600">Le trait d&apos;union entre pharmacien et fournisseur.</p>
             </div>

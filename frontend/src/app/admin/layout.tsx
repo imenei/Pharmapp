@@ -29,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className={clsx('w-64 bg-white flex flex-col border-r border-[#A5D6A7]', 'fixed inset-y-0 left-0 z-40', 'transform transition-transform duration-300 ease-in-out', open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')}>
         <div className="p-6 border-b border-[#C8E6C9]">
           <div className="flex items-center space-x-3">
-            <img src="/pharma-flow-logo.jpg" alt="PHARMA FLOW" className="h-11 w-11 rounded-xl object-cover border border-green-100" />
+            <img src="/logo3.png" alt="PHARMA FLOW" className="h-11 w-11 rounded-xl object-cover border border-green-100" />
             <div>
               <h1 className="text-lg font-bold text-[#2E7D32]">PHARMA FLOW</h1>
               <p className="text-xs text-green-600">Administration</p>
