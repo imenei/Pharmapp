@@ -194,7 +194,7 @@ export default function Home() {
     <div className="flex justify-between items-center h-16">
     <Link href="/" className="flex items-center gap-2">
   <img 
-    src="/logo1.png" 
+    src="/logo3.png" 
     alt="Logo" 
     className="h-8 w-auto object-contain"
   />
