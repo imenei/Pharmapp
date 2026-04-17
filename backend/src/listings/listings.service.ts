@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getUploadDir } from '../common/uploads';
 
 @Injectable()
 export class ListingsService {
@@ -105,7 +106,7 @@ export class ListingsService {
       const supplierName = profile?.companyName ?? 'Un fournisseur';
 
       await this.notificationsService.notifyAllPharmacists(
-        '📋 Nouveau catalogue disponible',
+        ' Nouveau catalogue disponible',
         `${supplierName} vient de publier un nouveau catalogue : "${listing.title}"`,
         NotificationType.listing,
       );
@@ -270,7 +271,7 @@ export class ListingsService {
     if (l.supplierId !== supplierId) throw new ForbiddenException('Non autorisé');
     await this.prisma.listing.delete({ where: { id } });
     try {
-      const fp = path.join(process.env.UPLOAD_DIR || './uploads', path.basename(l.fileUrl));
+      const fp = path.join(getUploadDir(), path.basename(l.fileUrl));
       if (fs.existsSync(fp)) fs.unlinkSync(fp);
     } catch {}
     return { message: 'Listing supprimé' };

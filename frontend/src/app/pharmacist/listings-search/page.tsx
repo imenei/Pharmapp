@@ -5,8 +5,7 @@ import { Search, X, Download, Building2, FileText } from 'lucide-react';
 import { useSearchListings } from '@/hooks/useApi';
 import { TierBadge, Empty, Spinner, Avatar } from '@/components/ui';
 import api from '@/lib/api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:4000';
+import { toAssetUrl } from '@/lib/runtime-config';
 
 export default function ListingsSearchPage() {
   const [inputs, setInputs] = useState(['', '', '', '', '']);
@@ -38,7 +37,7 @@ export default function ListingsSearchPage() {
   const handleDownload = async (id: string, fileUrl: string) => {
     await api.post(`/listings/${id}/download`);
     const a = document.createElement('a');
-    a.href = fileUrl.startsWith('/') ? `${API_BASE}${fileUrl}` : fileUrl;
+    a.href = toAssetUrl(fileUrl);
     a.download = '';
     a.target = '_blank';
     a.click();

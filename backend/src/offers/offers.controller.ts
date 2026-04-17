@@ -13,9 +13,10 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { CreateOfferDto } from './dto/create-offer.dto';
+import { getUploadDir } from '../common/uploads';
 
 const storage = diskStorage({
-  destination: process.env.UPLOAD_DIR || './uploads',
+  destination: getUploadDir(),
   filename: (req, file, cb) => cb(null, `offer-${Date.now()}${extname(file.originalname)}`),
 });
 

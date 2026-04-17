@@ -6,9 +6,8 @@ import { useAdminStats, useAdminUsers, useAdminPayments, useAdminMessages,
   useApproveUser, useRejectUser, useApprovePayment, useRejectPayment,
   useDeleteUser, useToggleUserActive, useMarkMessageRead } from '@/hooks/useApi';
 import { StatCard, CardSkeleton, Avatar, Spinner, Pagination } from '@/components/ui';
+import { toAssetUrl } from '@/lib/runtime-config';
 import { clsx } from 'clsx';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:4000';
 
 type Tab = 'users' | 'payments' | 'messages';
 
@@ -106,7 +105,7 @@ export default function AdminDashboard() {
                           {/* Bouton registre de commerce */}
                           {user.profile?.registerUrl && (
                             <a
-                              href={`${API_BASE}${user.profile.registerUrl}`}
+                              href={toAssetUrl(user.profile.registerUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-[#E8F5E9] text-[#2E7D32] rounded-lg hover:bg-[#2E7D32] hover:text-white transition-colors"
@@ -132,7 +131,7 @@ export default function AdminDashboard() {
                         {/* Bouton pour voir le registre de commerce */}
                         {registerUrl && (
                           <a 
-                            href={`${API_BASE}${registerUrl}`} 
+                            href={toAssetUrl(registerUrl)} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -198,7 +197,7 @@ export default function AdminDashboard() {
                           <p className="text-xs text-gray-400 mt-1">{new Date(pay.createdAt).toLocaleString('fr-DZ')}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <a href={`${API_BASE}${pay.proofUrl}`} target="_blank" rel="noopener noreferrer"
+                          <a href={toAssetUrl(pay.proofUrl)} target="_blank" rel="noopener noreferrer"
                             className="btn-secondary text-sm px-3 py-1.5 flex items-center gap-1">
                             <Eye size={14}/> Reçu
                           </a>

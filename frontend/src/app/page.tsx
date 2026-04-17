@@ -536,7 +536,7 @@ export default function Home() {
               <h4 className="text-xs font-bold text-gray-900 mb-3 uppercase tracking-wider">Support</h4>
               <ul className="space-y-2 text-xs text-gray-400">
                 <li><a href="tel:+213553720952" className="hover:text-[#2E7D32] transition-colors flex items-center"><Icons.Phone />+213 553 720 952</a></li>
-                <li><a href="mailto:contact@elsaidaliya.com" className="hover:text-[#2E7D32] transition-colors flex items-center"><Icons.Mail />contact@elsaidaliya.com</a></li>
+                <li><a href="mailto:contact@pharmaflowdz.com" className="hover:text-[#2E7D32] transition-colors flex items-center"><Icons.Mail />contact@pharmaflowdz.com</a></li>
                 <li><Link href="/contact" className="hover:text-[#2E7D32] transition-colors flex items-center"><Icons.HelpCircle />Centre d&apos;aide</Link></li>
               </ul>
             </div>

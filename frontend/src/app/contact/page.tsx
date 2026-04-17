@@ -56,7 +56,7 @@ export default function ContactPage() {
           <div className="space-y-6">
             {[
               { icon: <Phone className="w-6 h-6 text-[#2E7D32]"/>, title:'Téléphone', lines:['+213 553 720 952','Lun-Ven: 8h-18h'] },
-              { icon: <Mail  className="w-6 h-6 text-[#2E7D32]"/>, title:'Email',     lines:['contact@elsaidaliya.com','Réponse sous 24h'] },
+              { icon: <Mail  className="w-6 h-6 text-[#2E7D32]"/>, title:'Email',     lines:['contact@pharmaflowdz.com','Réponse sous 24h'] },
               { icon: <MapPin className="w-6 h-6 text-[#2E7D32]"/>, title:'Adresse',  lines:['Alger, Algérie','Zone d\'activités'] },
             ].map(({ icon, title, lines }) => (
               <div key={title} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">

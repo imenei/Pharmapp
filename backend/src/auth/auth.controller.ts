@@ -5,20 +5,14 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { extname } from 'path';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-
-const getUploadDir = () => {
-  const dir = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads');
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  return dir;
-};
+import { getUploadDir } from '../common/uploads';
 
 @Controller('auth')
 export class AuthController {

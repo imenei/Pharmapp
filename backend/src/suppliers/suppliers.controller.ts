@@ -15,6 +15,8 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { SubscriptionDto } from './dto/subscription.dto';
 import { Public } from '../common/decorators/public.decorator';
+import { getUploadDir } from '../common/uploads';
+
 @Controller('suppliers')
 export class SuppliersController {
   constructor(private service: SuppliersService) {}
@@ -67,7 +69,7 @@ export class SuppliersController {
   @UseInterceptors(
     FileInterceptor('avatar', {
       storage: diskStorage({
-        destination: process.env.UPLOAD_DIR || './uploads',
+        destination: getUploadDir(),
         filename: (req, file, cb) =>
           cb(null, `avatar-${Date.now()}${extname(file.originalname)}`),
       }),
@@ -89,7 +91,7 @@ export class SuppliersController {
   @UseInterceptors(
     FileInterceptor('proof', {
       storage: diskStorage({
-        destination: process.env.UPLOAD_DIR || './uploads',
+        destination: getUploadDir(),
         filename: (req, file, cb) =>
           cb(null, `proof-${Date.now()}${extname(file.originalname)}`),
       }),

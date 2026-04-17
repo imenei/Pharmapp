@@ -4,8 +4,7 @@ import { useState, useRef } from 'react';
 import { Plus, Trash2, Gift, Eye, Lock } from 'lucide-react';
 import { useMyOffers, useCreateOffer, useDeleteOffer, useSupplierSubscription } from '@/hooks/useApi';
 import { Spinner, Modal } from '@/components/ui';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:4000';
+import { toAssetUrl } from '@/lib/runtime-config';
 
 export default function SupplierOffersPage() {
   const { data: offers = [], isLoading } = useMyOffers();
@@ -89,7 +88,7 @@ export default function SupplierOffersPage() {
             return (
               <div key={o.id} className={`card flex flex-col ${expired ? 'opacity-60' : ''}`}>
                 {o.imageUrl && (
-                  <img src={`${API_BASE}${o.imageUrl}`} alt={o.title} className="w-full h-36 object-cover rounded-lg mb-3" />
+                  <img src={toAssetUrl(o.imageUrl)} alt={o.title} className="w-full h-36 object-cover rounded-lg mb-3" />
                 )}
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">{o.title}</h3>
@@ -124,7 +123,7 @@ export default function SupplierOffersPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Date d'expiration *</label>
+              <label className="label">Date d&apos;expiration *</label>
               <input type="date" className="input" min={minDateStr} value={form.expiresAt} onChange={e => setForm(p => ({ ...p, expiresAt: e.target.value }))} />
             </div>
             <div>
@@ -138,7 +137,7 @@ export default function SupplierOffersPage() {
           {error && <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>}
           <div className="flex gap-3">
             <button onClick={handleCreate} className="btn-primary flex-1" disabled={create.isPending}>
-              {create.isPending ? <Spinner size="sm" /> : <><Plus size={16} /> Publier l'offre</>}
+              {create.isPending ? <Spinner size="sm" /> : <><Plus size={16} /> Publier l&apos;offre</>}
             </button>
             <button onClick={() => setModal(false)} className="btn-secondary">Annuler</button>
           </div>

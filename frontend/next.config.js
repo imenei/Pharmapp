@@ -8,7 +8,17 @@ const nextConfig = {
     ],
   },
   async rewrites() {
+    const backendBase = (
+      process.env.INTERNAL_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:4000/api'
+    ).replace(/\/api$/, '');
+
     return [
+      {
+        source: '/uploads/:path*',
+        destination: `${backendBase}/uploads/:path*`,
+      },
       {
         source: '/api/:path*',
         destination: `${process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/:path*`,

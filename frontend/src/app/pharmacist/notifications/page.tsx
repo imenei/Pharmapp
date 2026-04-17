@@ -1,13 +1,19 @@
 'use client';
 // src/app/pharmacist/notifications/page.tsx
-import { Bell, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck, AlertCircle, CheckCircle, Info, CreditCard, Trophy, LayoutList, Gift } from 'lucide-react';
 import { useNotifications, useMarkNotificationRead, useMarkAllRead } from '@/hooks/useApi';
 import { Empty, Spinner } from '@/components/ui';
 import { clsx } from 'clsx';
 
-const typeIcon: Record<string, string> = {
-  success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️',
-  payment: '💳', subscription: '🏆', listing: '📋', offer: '🎁',
+const typeIcon: Record<string, React.ReactNode> = {
+  success: <CheckCircle size={20} className="text-green-500" />,
+  error: <AlertCircle size={20} className="text-red-500" />,
+  warning: <AlertCircle size={20} className="text-yellow-500" />,
+  info: <Info size={20} className="text-blue-500" />,
+  payment: <CreditCard size={20} className="text-green-600" />,
+  subscription: <Trophy size={20} className="text-purple-500" />,
+  listing: <LayoutList size={20} className="text-indigo-500" />,
+  offer: <Gift size={20} className="text-pink-500" />,
 };
 
 export default function NotificationsPage() {
@@ -46,7 +52,7 @@ export default function NotificationsPage() {
                 n.isRead ? 'border-gray-200 opacity-70' : 'border-blue-500 bg-blue-50/30',
               )}>
               <div className="flex items-start gap-3">
-                <span className="text-xl mt-0.5">{typeIcon[n.type] ?? 'ℹ️'}</span>
+                <span className="mt-0.5">{typeIcon[n.type] ?? <Info size={20} className="text-gray-500" />}</span>
                 <div className="flex-1 min-w-0">
                   <p className={clsx('font-semibold text-gray-900', !n.isRead && 'text-blue-900')}>{n.title}</p>
                   <p className="text-sm text-gray-600 mt-0.5">{n.message}</p>

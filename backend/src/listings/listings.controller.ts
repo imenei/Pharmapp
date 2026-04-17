@@ -6,19 +6,12 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { extname } from 'path';
 import { ListingsService } from './listings.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
-
-// Ensure upload dir exists at startup
-const getUploadDir = () => {
-  const dir = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads');
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  return dir;
-};
+import { getUploadDir } from '../common/uploads';
 
 @Controller('listings')
 export class ListingsController {

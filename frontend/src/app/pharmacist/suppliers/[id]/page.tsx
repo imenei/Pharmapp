@@ -6,6 +6,7 @@ import { MapPin, Phone, Mail, Package, Gift, Star } from 'lucide-react';
 import { useSupplier, useCreateRating } from '@/hooks/useApi';
 import { Avatar, TierBadge, Stars, Spinner, Modal, Empty } from '@/components/ui';
 import api from '@/lib/api';
+import { toAssetUrl } from '@/lib/runtime-config';
 
 export default function SupplierDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,10 +26,7 @@ export default function SupplierDetailPage() {
 
   const resolveFileUrl = (fileUrl?: string) => {
     if (!fileUrl) return null;
-    if (/^https?:\/\//i.test(fileUrl)) return fileUrl;
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
-    const assetBase = apiBase.replace(/\/api$/, '');
-    return fileUrl.startsWith('/') ? `${assetBase}${fileUrl}` : `${assetBase}/${fileUrl}`;
+    return toAssetUrl(fileUrl);
   };
 
   const handleDownload = async (listingId: string, fileUrl?: string) => {

@@ -1,15 +1,10 @@
 'use client';
-// src/app/pharmacist/offers/page.tsx
 
 import { useState } from 'react';
 import { Search, Eye, Gift } from 'lucide-react';
 import { useOffers } from '@/hooks/useApi';
 import { Avatar, Empty, CardSkeleton, Pagination } from '@/components/ui';
 import api from '@/lib/api';
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') ||
-  'http://localhost:4000';
 
 export default function PharmacistOffersPage() {
   const [search, setSearch] = useState('');
@@ -24,7 +19,8 @@ export default function PharmacistOffersPage() {
 
   const getImageUrl = (url: string) => {
     if (!url) return '';
-    return url.startsWith('http') ? url : `${API_BASE}${url}`;
+    if (url.startsWith('http')) return url;
+    return url.startsWith('/') ? url : `/${url}`;
   };
 
   return (
@@ -38,7 +34,6 @@ export default function PharmacistOffersPage() {
         </p>
       </div>
 
-      {/* Search */}
       <div className="card">
         <form
           onSubmit={(e) => {
@@ -66,7 +61,6 @@ export default function PharmacistOffersPage() {
         </form>
       </div>
 
-      {/* Results */}
       {isLoading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (

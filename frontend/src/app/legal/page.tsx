@@ -109,7 +109,7 @@ export default function LegalPage() {
 
               <h3 className="text-xl font-semibold text-[#2E7D32]">5. Vos Droits</h3>
               <p className="text-gray-600">
-                Vous avez le droit d&apos;accéder à vos données, de les corriger ou de demander leur suppression. Pour exercer ces droits, contactez-nous à <a href="mailto:contact@elsaidaliya.com" className="text-[#2E7D32] hover:underline">contact@elsaidaliya.com</a>.
+                Vous avez le droit d&apos;accéder à vos données, de les corriger ou de demander leur suppression. Pour exercer ces droits, contactez-nous à <a href="mailto:contact@pharmaflowdz.com" className="text-[#2E7D32] hover:underline">contact@pharmaflowdz.com</a>.
               </p>
 
               <h3 className="text-xl font-semibold text-[#2E7D32]">6. Cookies</h3>
@@ -120,7 +120,7 @@ export default function LegalPage() {
               <h3 className="text-xl font-semibold text-[#2E7D32]">7. Contact</h3>
               <p className="text-gray-600">
                 Pour toute question relative à la confidentialité de vos données, contactez-nous à{' '}
-                <a href="mailto:contact@elsaidaliya.com" className="text-[#2E7D32] hover:underline">contact@elsaidaliya.com</a>.
+                <a href="mailto:contact@pharmaflowdz.com" className="text-[#2E7D32] hover:underline">contact@pharmaflowdz.com</a>.
               </p>
             </>
           )}

@@ -142,7 +142,7 @@ export class OffersService {
       const supplierName = profile?.companyName ?? 'Un fournisseur';
 
       await this.notificationsService.notifyAllPharmacists(
-        '🎁 Nouvelle offre disponible',
+        ' Nouvelle offre disponible',
         `${supplierName} vient de publier une nouvelle offre : "${offer.title}"`,
         NotificationType.offer,
       );

@@ -130,15 +130,31 @@ export default function SupplierSubscriptionPage() {
         <div className="card max-w-lg mx-auto space-y-5">
           <button onClick={() => setStep('plans')} className="text-sm text-blue-600 hover:underline">Retour aux plans</button>
           <h2 className="text-lg font-bold text-gray-900">Soumettre votre paiement</h2>
-          <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800 space-y-1">
-            <p className="font-semibold">Instructions de paiement :</p>
-            <p>1. Effectuez un virement bancaire ou CCP au nom de <strong>PHARMA FLOW SARL</strong></p>
-            <p>2. Montant : <strong>{billing === 'yearly' ? plans.find((p: any) => p.id === selectedPlan)?.yearlyPrice?.toLocaleString() : plans.find((p: any) => p.id === selectedPlan)?.price?.toLocaleString()} DA</strong></p>
-            <p>3. Joignez votre recu ci-dessous</p>
+          <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800 space-y-3">
+            <div>
+              <p className="font-semibold">Titre : Pharma Flow</p>
+              <p>Paiement par virement bancaire</p>
+            </div>
+
+            <div className="space-y-1">
+              <p><span className="font-semibold">Nom du beneficiaire :</span> Pharma Flow</p>
+              <p className="font-semibold">Coordonnees bancaires :</p>
+              <p><span className="font-medium">Banque :</span> BDL Algerie</p>
+              <p><span className="font-medium">RIB :</span> 123 456 789 000</p>
+              <p><span className="font-medium">SWIFT :</span> BNALDZAL</p>
+            </div>
+
+            <div className="space-y-1">
+              <p className="font-semibold">Instructions :</p>
+              <p>1. Effectuez le virement depuis votre banque</p>
+              <p>2. Montant : <strong>{billing === 'yearly' ? plans.find((p: any) => p.id === selectedPlan)?.yearlyPrice?.toLocaleString() : plans.find((p: any) => p.id === selectedPlan)?.price?.toLocaleString()} DA</strong></p>
+              <p>3. Prenez une capture du recu</p>
+              <p>4. Telechargez-la sur la plateforme</p>
+            </div>
           </div>
 
           <div>
-            <label className="label">Preuve de paiement *</label>
+            <label className="label">Deposer le recu de virement *</label>
             <div onClick={() => proofRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
               {proofFile ? (
                 <div>
@@ -149,7 +165,8 @@ export default function SupplierSubscriptionPage() {
               ) : (
                 <div>
                   <Upload size={28} className="mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-600">PDF, JPG ou PNG (max 10 MB)</p>
+                  <p className="text-gray-600">Choisir un fichier</p>
+                  <p className="text-xs text-gray-500 mt-1">PDF, JPG ou PNG (max 10 MB)</p>
                 </div>
               )}
             </div>
@@ -159,7 +176,7 @@ export default function SupplierSubscriptionPage() {
           {msg && <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">{msg}</div>}
 
           <button onClick={handleSubmit} className="btn-primary w-full py-3" disabled={submit.isPending || !proofFile}>
-            {submit.isPending ? <Spinner size="sm" /> : "Soumettre ma demande d'abonnement"}
+            {submit.isPending ? <Spinner size="sm" /> : 'Envoyer la preuve'}
           </button>
         </div>
       ) : null}
