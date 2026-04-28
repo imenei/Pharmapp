@@ -31,7 +31,17 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-const PUBLIC_PATHS = ['/', '/auth/signin', '/auth/signup', '/auth/signup-success', '/contact', '/legal', '/waiting-approval'];
+const PUBLIC_PATHS = [
+  '/',
+  '/auth/signin',
+  '/auth/signup',
+  '/auth/signup-success',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/contact',
+  '/legal',
+  '/waiting-approval',
+];
 
 const isPublicPath = () => {
   if (typeof window === 'undefined') return true;

@@ -37,6 +37,13 @@ export async function logout() {
   } finally {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    delete api.defaults.headers.common.Authorization;
+    if (typeof document !== 'undefined') {
+      document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=Lax';
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth:logout'));
+    }
   }
 }
 

@@ -1,19 +1,18 @@
-// middleware.ts  (at frontend root)
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = [
-  '/auth/signin', '/auth/signup', '/auth/signup-success',
-  '/waiting-approval', '/_next', '/favicon', '/api',
-];
+const PROTECTED_PREFIXES = ['/admin', '/pharmacist', '/supplier'];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const needsAuth = PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
 
-  // Allow public paths
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) return NextResponse.next();
+  if (!needsAuth) {
+    return NextResponse.next();
+  }
 
-  // Check for token cookie (set by login)
   const token = req.cookies.get('accessToken')?.value;
   if (!token) {
     return NextResponse.redirect(new URL('/auth/signin', req.url));
@@ -23,5 +22,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/admin/:path*', '/pharmacist/:path*', '/supplier/:path*'],
 };

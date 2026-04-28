@@ -19,7 +19,7 @@ export default function SupplierOffersPage() {
 
   const isSubActive =
     sub &&
-    sub.isActive &&
+    (sub.accessGranted || sub.isActive) &&
     sub.subscriptionEnd &&
     new Date(sub.subscriptionEnd) > new Date();
 

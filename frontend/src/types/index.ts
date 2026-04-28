@@ -100,6 +100,8 @@ export interface SubscriptionPayment {
   subscriptionEnd?: string;
   isActive: boolean;
   createdAt: string;
+  trialActive?: boolean;
+  accessGranted?: boolean;
   subscriptionPlan: SubscriptionPlan;
 }
 

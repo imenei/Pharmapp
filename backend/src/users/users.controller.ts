@@ -1,8 +1,8 @@
-// src/users/users.controller.ts
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UsersService } from './users.service';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -17,7 +17,7 @@ export class UsersController {
   @Post('change-password')
   changePassword(
     @CurrentUser('id') userId: string,
-    @Body() body: { currentPassword: string; newPassword: string },
+    @Body() body: ChangePasswordDto,
   ) {
     return this.service.changePassword(userId, body.currentPassword, body.newPassword);
   }

@@ -11,10 +11,10 @@ export default function SupplierDashboard() {
 
   const isSubActive =
     sub &&
-    sub.isActive &&
+    (sub.accessGranted || sub.isActive) &&
     sub.subscriptionEnd &&
     new Date(sub.subscriptionEnd) > new Date();
-  const isPendingReview = sub && !sub.isActive && sub.status === 'pending';
+  const isPendingReview = sub && !sub.trialActive && !sub.isActive && sub.status === 'pending';
 
   if (isLoading) {
     return (
@@ -112,6 +112,7 @@ export default function SupplierDashboard() {
               <p className="text-sm text-gray-600">
                 Valide jusqu&apos;au {new Date(sub.subscriptionEnd).toLocaleDateString('fr-DZ')}
               </p>
+              {sub.trialActive && <p className="text-sm text-emerald-700">Periode d&apos;essai gratuite active.</p>}
             </div>
           </div>
         </div>

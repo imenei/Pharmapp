@@ -1,24 +1,32 @@
-// src/auth/auth.controller.ts
 import {
-  Controller, Post, Get, Body, UseGuards, Request,
-  HttpCode, UseInterceptors, UploadedFile, BadRequestException,
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Request,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { AuthGuard } from '@nestjs/passport';
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { RefreshDto } from './dto/refresh.dto';
-import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { getUploadDir } from '../common/uploads';
+import { AuthService } from './auth.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { RefreshDto } from './dto/refresh.dto';
+import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  // ── Register — accepts multipart/form-data with optional file ─────────────
   @Public()
   @Post('register')
   @UseInterceptors(
@@ -31,24 +39,26 @@ export class AuthController {
       fileFilter: (_req, file, cb) => {
         const allowed = ['.jpg', '.jpeg', '.png', '.pdf'];
         const ext = extname(file.originalname).toLowerCase();
-        if (allowed.includes(ext)) cb(null, true);
-        else cb(new BadRequestException('Format non accepté (JPG, PNG, PDF uniquement)'), false);
+        if (allowed.includes(ext)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Format non accepte (JPG, PNG, PDF uniquement)'), false);
+        }
       },
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   register(
     @Body() dto: RegisterDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    // If a file was uploaded, set its URL in the DTO
     if (file) {
       dto.registerUrl = `/uploads/${file.filename}`;
     }
+
     return this.authService.register(dto);
   }
 
-  // ── Login ─────────────────────────────────────────────────────────────────
   @Public()
   @UseGuards(AuthGuard('local'))
   @Post('login')
@@ -57,7 +67,6 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  // ── Refresh token ─────────────────────────────────────────────────────────
   @Public()
   @Post('refresh')
   @HttpCode(200)
@@ -65,14 +74,26 @@ export class AuthController {
     return this.authService.refreshTokens(dto.refreshToken);
   }
 
-  // ── Logout ────────────────────────────────────────────────────────────────
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(200)
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(200)
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
+  }
+
   @Post('logout')
   @HttpCode(200)
   logout(@Body() dto: RefreshDto) {
     return this.authService.logout(dto.refreshToken);
   }
 
-  // ── Get current user ──────────────────────────────────────────────────────
   @Get('me')
   getMe(@CurrentUser('id') userId: string) {
     return this.authService.getMe(userId);

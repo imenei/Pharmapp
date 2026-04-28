@@ -1,125 +1,129 @@
 'use client';
-// src/app/legal/page.tsx
+
 import { useState } from 'react';
 import Link from 'next/link';
 
 export default function LegalPage() {
-  const [activeTab, setActiveTab] = useState<'cgu'|'privacy'>('cgu');
+  const [activeTab, setActiveTab] = useState<'cgu' | 'privacy'>('cgu');
 
   return (
     <div className="min-h-screen bg-[#E8F5E9]">
-
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">💊</span>
-            <span className="text-xl font-bold text-[#2E7D32]">ELSAIDALIYA</span>
+            <span className="text-xl font-bold text-[#2E7D32]">PHARMA FLOW</span>
           </Link>
-          <Link href="/auth/signin" className="bg-[#2E7D32] text-white px-4 py-2 rounded-lg hover:bg-[#1B5E20] transition-colors text-sm font-medium">
+          <Link href="/auth/signin" className="rounded-lg bg-[#2E7D32] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1B5E20]">
             Se connecter
           </Link>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Informations Légales</h1>
+      <main className="mx-auto max-w-4xl px-4 py-12">
+        <h1 className="mb-8 text-center text-3xl font-bold text-gray-900">Informations legales</h1>
 
-        {/* Tab selector */}
-        <div className="flex bg-gray-100 p-1 rounded-xl mb-10 max-w-sm mx-auto">
-          {([['cgu','Conditions d\'utilisation'],['privacy','Confidentialité']] as const).map(([key,label])=>(
-            <button key={key} onClick={() => setActiveTab(key)}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+        <div className="mx-auto mb-10 flex max-w-sm rounded-xl bg-gray-100 p-1">
+          {([
+            ['cgu', "Conditions d'utilisation"],
+            ['privacy', 'Confidentialite'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition-colors ${
                 activeTab === key ? 'bg-[#2E7D32] text-white shadow-sm' : 'text-gray-600 hover:text-[#2E7D32]'
-              }`}>
+              }`}
+            >
               {label}
             </button>
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 prose prose-lg max-w-none">
+        <div className="prose prose-lg max-w-none rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
           {activeTab === 'cgu' ? (
             <>
-              <h2 className="text-2xl font-semibold text-[#2E7D32] mt-0">Conditions d&apos;Utilisation</h2>
+              <h2 className="mt-0 text-2xl font-semibold text-[#2E7D32]">Conditions d&apos;utilisation</h2>
               <p className="text-gray-600">
-                Bienvenue sur PHARMA FLOW. En utilisant notre plateforme, vous acceptez ces conditions d&apos;utilisation. Veuillez les lire attentivement.
+                Bienvenue sur Pharma Flow. En utilisant notre plateforme, vous acceptez ces conditions d&apos;utilisation.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">1. Acceptation des Conditions</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">1. Acceptation des conditions</h3>
               <p className="text-gray-600">
-                En accédant à ou en utilisant Elsaidaliya, vous acceptez d&apos;être lié par ces Conditions. Si vous n&apos;acceptez pas ces Conditions, vous ne devez pas utiliser notre plateforme.
+                En accedant a ou en utilisant Pharma Flow, vous acceptez d&apos;etre lie par ces conditions.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">2. Éligibilité</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">2. Eligibilite</h3>
               <p className="text-gray-600">
-                Pour utiliser notre plateforme, vous devez être un professionnel du secteur pharmaceutique en Algérie, soit en tant que pharmacien, soit en tant que fournisseur. Vous devez être légalement autorisé à exercer votre profession et posséder toutes les licences et autorisations requises par la loi algérienne.
+                Pour utiliser notre plateforme, vous devez etre un professionnel du secteur pharmaceutique en Algerie, soit en tant que pharmacien, soit en tant que fournisseur.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">3. Compte Utilisateur</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">3. Compte utilisateur</h3>
               <p className="text-gray-600">
-                Vous êtes responsable du maintien de la confidentialité de vos informations de connexion et de toutes les activités qui se produisent sous votre compte. Vous acceptez de nous informer immédiatement de toute utilisation non autorisée de votre compte.
+                Vous etes responsable de la confidentialite de vos informations de connexion et de toutes les activites qui se produisent sous votre compte.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">4. Contenu et Conduite</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">4. Contenu et conduite</h3>
               <p className="text-gray-600">
-                Vous acceptez de ne pas publier de contenu faux, trompeur ou illégal. Les listings de produits doivent être exacts et conformes à la réglementation pharmaceutique algérienne. Elsaidaliya se réserve le droit de supprimer tout contenu violant ces conditions.
+                Vous acceptez de ne pas publier de contenu faux, trompeur ou illegal. Pharma Flow se reserve le droit de supprimer tout contenu violant ces conditions.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">5. Abonnements et Paiements</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">5. Abonnements et paiements</h3>
               <p className="text-gray-600">
-                Les abonnements sont soumis aux tarifs affichés sur la plateforme. Les paiements sont effectués par virement bancaire ou CCP et doivent être accompagnés d&apos;une preuve de paiement. Les abonnements sont activés après vérification du paiement par notre équipe.
+                Les abonnements sont soumis aux tarifs affiches sur la plateforme. Les paiements sont effectues par virement bancaire et doivent etre accompagnes d&apos;une preuve de paiement.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">6. Limitation de Responsabilité</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">6. Limitation de responsabilite</h3>
               <p className="text-gray-600">
-                Elsaidaliya agit en tant qu&apos;intermédiaire entre pharmaciens et fournisseurs. Nous ne sommes pas responsables des transactions commerciales effectuées entre les utilisateurs via la plateforme. La disponibilité et l&apos;exactitude des produits relèvent de la responsabilité des fournisseurs.
+                Pharma Flow agit en tant qu&apos;intermediaire entre pharmaciens et fournisseurs. Les transactions commerciales relevent de la responsabilite des utilisateurs.
               </p>
 
               <h3 className="text-xl font-semibold text-[#2E7D32]">7. Modifications</h3>
               <p className="text-gray-600">
-                Elsaidaliya se réserve le droit de modifier ces conditions à tout moment. Les utilisateurs seront informés des modifications importantes par email.
+                Pharma Flow se reserve le droit de modifier ces conditions a tout moment.
               </p>
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-semibold text-[#2E7D32] mt-0">Politique de Confidentialité</h2>
+              <h2 className="mt-0 text-2xl font-semibold text-[#2E7D32]">Politique de confidentialite</h2>
               <p className="text-gray-600">
-                Votre vie privée est importante pour nous. Cette politique explique comment Elsaidaliya collecte, utilise et protège vos informations personnelles.
+                Votre vie privee est importante pour nous. Cette politique explique comment Pharma Flow collecte, utilise et protege vos informations personnelles.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">1. Données Collectées</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">1. Donnees collectees</h3>
               <p className="text-gray-600">
-                Nous collectons les informations que vous nous fournissez lors de l&apos;inscription (nom, email, téléphone, adresse professionnelle), ainsi que les données d&apos;utilisation de la plateforme (pages visitées, téléchargements, interactions).
+                Nous collectons les informations que vous nous fournissez lors de l&apos;inscription ainsi que les donnees d&apos;utilisation de la plateforme.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">2. Utilisation des Données</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">2. Utilisation des donnees</h3>
               <p className="text-gray-600">
-                Vos données sont utilisées pour fournir et améliorer nos services, vous contacter concernant votre compte, traiter vos paiements et abonnements, et vous envoyer des notifications pertinentes sur la plateforme.
+                Vos donnees sont utilisees pour fournir et ameliorer nos services, traiter vos paiements et vous envoyer des notifications pertinentes.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">3. Protection des Données</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">3. Protection des donnees</h3>
               <p className="text-gray-600">
-                Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos informations contre tout accès non autorisé. Vos mots de passe sont chiffrés et ne sont jamais stockés en clair.
+                Nous mettons en oeuvre des mesures de securite appropriees pour proteger vos informations contre tout acces non autorise.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">4. Partage des Données</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">4. Partage des donnees</h3>
               <p className="text-gray-600">
-                Nous ne vendons pas vos données personnelles à des tiers. Les informations de profil visibles (nom d&apos;entreprise, wilaya, description) sont accessibles aux autres utilisateurs approuvés de la plateforme.
+                Nous ne vendons pas vos donnees personnelles a des tiers. Les informations de profil visibles sont accessibles aux autres utilisateurs approuves de la plateforme.
               </p>
 
-              <h3 className="text-xl font-semibold text-[#2E7D32]">5. Vos Droits</h3>
+              <h3 className="text-xl font-semibold text-[#2E7D32]">5. Vos droits</h3>
               <p className="text-gray-600">
-                Vous avez le droit d&apos;accéder à vos données, de les corriger ou de demander leur suppression. Pour exercer ces droits, contactez-nous à <a href="mailto:contact@pharmaflowdz.com" className="text-[#2E7D32] hover:underline">contact@pharmaflowdz.com</a>.
+                Vous avez le droit d&apos;acceder a vos donnees, de les corriger ou de demander leur suppression. Pour exercer ces droits, contactez-nous a{' '}
+                <a href="mailto:contact@pharmaflowdz.com" className="text-[#2E7D32] hover:underline">contact@pharmaflowdz.com</a>.
               </p>
 
               <h3 className="text-xl font-semibold text-[#2E7D32]">6. Cookies</h3>
               <p className="text-gray-600">
-                Nous utilisons des cookies essentiels pour le fonctionnement de la plateforme (authentification, session). Aucun cookie publicitaire ou de tracking tiers n&apos;est utilisé.
+                Nous utilisons des cookies essentiels pour le fonctionnement de la plateforme, notamment pour l&apos;authentification et la session.
               </p>
 
               <h3 className="text-xl font-semibold text-[#2E7D32]">7. Contact</h3>
               <p className="text-gray-600">
-                Pour toute question relative à la confidentialité de vos données, contactez-nous à{' '}
+                Pour toute question relative a la confidentialite de vos donnees, contactez-nous a{' '}
                 <a href="mailto:contact@pharmaflowdz.com" className="text-[#2E7D32] hover:underline">contact@pharmaflowdz.com</a>.
               </p>
             </>
@@ -127,10 +131,10 @@ export default function LegalPage() {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-gray-200 py-8 mt-16">
+      <footer className="mt-16 border-t border-gray-200 bg-white py-8">
         <p className="text-center text-sm text-gray-600">
-          © 2025 Elsaidaliya ·{' '}
-          <Link href="/contact" className="hover:text-[#2E7D32] transition-colors">Nous contacter</Link>
+          © 2025 Pharma Flow ·{' '}
+          <Link href="/contact" className="transition-colors hover:text-[#2E7D32]">Nous contacter</Link>
         </p>
       </footer>
     </div>

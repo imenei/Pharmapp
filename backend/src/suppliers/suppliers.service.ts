@@ -1,14 +1,26 @@
-// src/suppliers/suppliers.service.ts
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { unlink } from 'fs/promises';
+import { basename, join } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CreateRatingDto } from './dto/create-rating.dto';
+import { getUploadDir } from '../common/uploads';
+import { getTrialDaysForDate, getTrialEndDate, isTrialActiveFromDate } from '../common/subscription-access';
 
 @Injectable()
 export class SuppliersService {
   constructor(private prisma: PrismaService) {}
 
   private async ensureSupplierSubscriptionApproved(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, status: true, createdAt: true },
+    });
+
+    if (user?.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt)) {
+      return;
+    }
+
     const activeSubscription = await this.prisma.subscriptionPayment.findFirst({
       where: {
         userId,
@@ -26,7 +38,6 @@ export class SuppliersService {
     }
   }
 
-  // ── List approved suppliers with aggregated stats (single optimized query) ──
   async findAll(wilaya?: string, search?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
 
@@ -54,7 +65,6 @@ export class SuppliersService {
           avatarUrl: true,
           description: true,
           user: { select: { email: true, createdAt: true } },
-          // Aggregated stats in one query (no N+1)
           _count: { select: { listings: true, offers: true } },
           ratingsReceived: {
             select: { score: true },
@@ -100,7 +110,6 @@ export class SuppliersService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  // ── Get single supplier profile with full details ──────────────────────────
   async findOne(id: string) {
     const profile = await this.prisma.profile.findFirst({
       where: {
@@ -148,7 +157,6 @@ export class SuppliersService {
     };
   }
 
-  // ── Update supplier profile ────────────────────────────────────────────────
   async updateProfile(userId: string, dto: UpdateProfileDto, avatarUrl?: string) {
     await this.ensureSupplierSubscriptionApproved(userId);
     return this.prisma.profile.update({
@@ -164,7 +172,6 @@ export class SuppliersService {
     });
   }
 
-  // ── Supplier stats ─────────────────────────────────────────────────────────
   async getStats(userId: string) {
     const [listingStats, offerCount, ratingStats, subscription] = await Promise.all([
       this.prisma.listing.aggregate({
@@ -202,9 +209,7 @@ export class SuppliersService {
     };
   }
 
-  // ── Create rating ──────────────────────────────────────────────────────────
   async createRating(pharmacistId: string, dto: CreateRatingDto) {
-    // Check supplier exists
     const supplier = await this.prisma.profile.findFirst({
       where: { id: dto.supplierId, user: { role: 'supplier' } },
     });
@@ -222,7 +227,6 @@ export class SuppliersService {
     });
   }
 
-  // ── Gold suppliers for homepage ────────────────────────────────────────────
   async getGoldSuppliers() {
     return this.prisma.profile.findMany({
       where: {
@@ -247,8 +251,21 @@ export class SuppliersService {
     });
   }
 
-  // ── Submit subscription payment ────────────────────────────────────────────
   async submitSubscription(userId: string, planId: string, proofUrl: string) {
+    const existingPending = await this.prisma.subscriptionPayment.findFirst({
+      where: {
+        userId,
+        status: 'pending',
+      },
+      select: { id: true },
+    });
+
+    if (existingPending) {
+      throw new ConflictException(
+        'Vous avez deja une preuve de paiement en attente. Supprimez-la avant de soumettre un autre abonnement.',
+      );
+    }
+
     return this.prisma.subscriptionPayment.create({
       data: {
         userId,
@@ -256,10 +273,35 @@ export class SuppliersService {
         proofUrl,
         status: 'pending',
       },
+      include: { subscriptionPlan: true },
     });
   }
 
-  // ── Get subscription plans ─────────────────────────────────────────────────
+  async deletePendingSubscription(userId: string) {
+    const pending = await this.prisma.subscriptionPayment.findFirst({
+      where: {
+        userId,
+        status: 'pending',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!pending) {
+      throw new NotFoundException('Aucune preuve de paiement en attente a supprimer.');
+    }
+
+    await this.prisma.subscriptionPayment.delete({
+      where: { id: pending.id },
+    });
+
+    if (pending.proofUrl?.startsWith('/uploads/')) {
+      const filePath = join(getUploadDir(), basename(pending.proofUrl));
+      await unlink(filePath).catch(() => undefined);
+    }
+
+    return { message: 'Preuve de paiement supprimee avec succes.' };
+  }
+
   async getPlans() {
     return this.prisma.subscriptionPlan.findMany({
       where: { isActive: true },
@@ -267,12 +309,52 @@ export class SuppliersService {
     });
   }
 
-  // ── Get current subscription ───────────────────────────────────────────────
   async getCurrentSubscription(userId: string) {
-    return this.prisma.subscriptionPayment.findFirst({
+    const subscription = await this.prisma.subscriptionPayment.findFirst({
       where: { userId },
       include: { subscriptionPlan: true },
       orderBy: { createdAt: 'desc' },
     });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { status: true, role: true, createdAt: true },
+    });
+
+    const trialActive = !!user && user.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt);
+    const trialEnd = user?.createdAt ? getTrialEndDate(user.createdAt) : null;
+
+    if (!subscription && trialActive && user?.createdAt) {
+      return {
+        id: 'trial-access',
+        status: 'approved',
+        proofUrl: '',
+        subscriptionStart: user.createdAt,
+        subscriptionEnd: trialEnd,
+        isActive: true,
+        createdAt: user.createdAt,
+        trialActive: true,
+        accessGranted: true,
+        subscriptionPlan: {
+          id: 'trial-plan',
+          name: 'Or offert',
+          tier: 'gold',
+          price: 0,
+          yearlyPrice: 0,
+          durationDays: getTrialDaysForDate(user.createdAt),
+          features: [],
+        },
+      };
+    }
+
+    if (!subscription) {
+      return null;
+    }
+
+    return {
+      ...subscription,
+      trialActive,
+      accessGranted: trialActive || (subscription.isActive && !!subscription.subscriptionEnd && new Date(subscription.subscriptionEnd) > new Date()),
+    };
   }
 }

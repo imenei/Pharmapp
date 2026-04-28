@@ -96,6 +96,11 @@ export default function SigninPage() {
                     {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                <div className="mt-2 text-right">
+                  <Link href="/auth/forgot-password" className="text-sm font-medium text-[#2E7D32] hover:text-[#1B5E20] hover:underline">
+                    Mot de passe oublie ?
+                  </Link>
+                </div>
               </div>
 
               {error && (

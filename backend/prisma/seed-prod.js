@@ -18,7 +18,7 @@ async function main() {
       role: 'admin',
       status: 'approved',
       isActive: true,
-      profile: { create: { companyName: 'El Saidalya Admin', wilaya: 'Alger' } },
+      profile: { create: { companyName: 'Pharma Flow Admin', wilaya: 'Alger' } },
     },
   });
 
@@ -26,7 +26,7 @@ async function main() {
   const plans = [
     { id: 'plan-gold', name: 'Or', tier: 'gold', price: 25000, yearlyPrice: 300000, durationDays: 30, features: ["Priorité maximale dans les résultats","Mise à jour quotidienne des listings","Notifications immédiates aux pharmaciens","Annonces sur la page d'accueil","Support VIP 24/7"] },
     { id: 'plan-silver', name: 'Argent', tier: 'silver', price: 15000, yearlyPrice: 180000, durationDays: 30, features: ["Mise en avant dans les résultats","Notifications aux pharmaciens","Support prioritaire","Statistiques avancées"] },
-    { id: 'plan-bronze', name: 'Bronze', tier: 'bronze', price: 10000, yearlyPrice: 120000, durationDays: 30, features: ["Visibilité dans les résultats","Semaine d'essai gratuite","Fonctionnalités de base","Support standard"] },
+    { id: 'plan-bronze', name: 'Bronze', tier: 'bronze', price: 10000, yearlyPrice: 120000, durationDays: 30, features: ["Visibilité dans les résultats","Premier mois de lancement offert","Fonctionnalités de base","Support standard"] },
   ];
   for (const p of plans) {
     await prisma.subscriptionPlan.upsert({ where: { id: p.id }, update: {}, create: p });

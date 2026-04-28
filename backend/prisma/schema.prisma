@@ -1,6 +1,6 @@
-// prisma/schema.prisma
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -57,31 +57,32 @@ model User {
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  profile              Profile?
-  notifications        Notification[]
-  sentContactMessages  ContactMessage[]
-  refreshTokens        RefreshToken[]
+  // Relations
+  profile             Profile?
+  notifications       Notification[]
+  sentContactMessages ContactMessage[]
+  refreshTokens       RefreshToken[]
 
   @@map("users")
 }
 
 model Profile {
-  id            String  @id
-  companyName   String? @map("company_name")
-  address       String?
-  wilaya        String?
-  phone         String?
-  description   String? @db.Text
-  avatarUrl     String? @map("avatar_url")
-  registerUrl   String? @map("register_url")  // ← registre de commerce
-
-  user                 User                 @relation(fields: [id], references: [id], onDelete: Cascade)
+  id                   String                @id // Same as User.id (1:1)
+  companyName          String?               @map("company_name")
+  address              String?
+  wilaya               String?
+  phone                String?
+  description          String?               @db.Text
+  avatarUrl            String?               @map("avatar_url")
+  registerUrl          String?               @map("register_url") // ← AJOUTÉ
+  // Relations
+  user                 User                  @relation(fields: [id], references: [id], onDelete: Cascade)
   supplierData         SupplierData?
   pharmacistData       PharmacistData?
   listings             Listing[]
   offers               Offer[]
-  ratingsGiven         Rating[]             @relation("RatingsGiven")
-  ratingsReceived      Rating[]             @relation("RatingsReceived")
+  ratingsGiven         Rating[]              @relation("RatingsGiven")
+  ratingsReceived      Rating[]              @relation("RatingsReceived")
   subscriptionPayments SubscriptionPayment[]
 
   @@map("profiles")
@@ -121,7 +122,7 @@ model SubscriptionPlan {
   id           String           @id @default(uuid())
   name         String
   tier         SubscriptionTier
-  price        Int
+  price        Int // Price in DZD (monthly)
   yearlyPrice  Int              @map("yearly_price")
   durationDays Int              @map("duration_days")
   features     String[]
@@ -153,7 +154,7 @@ model SubscriptionPayment {
   @@map("subscription_payments")
 }
 
-// ─── Listings ────────────────────────────────────────────────────────────────
+// ─── Listings (Product Catalogs) ──────────────────────────────────────────────
 
 model Listing {
   id            String   @id @default(uuid())
@@ -161,13 +162,13 @@ model Listing {
   title         String
   description   String?  @db.Text
   fileUrl       String   @map("file_url")
-  extractedText String?  @db.Text @map("extracted_text")
+  extractedText String?  @map("extracted_text") @db.Text
   views         Int      @default(0)
   downloads     Int      @default(0)
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  supplier Profile @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  supplier Profile          @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   products ListingProduct[]
 
   @@index([supplierId])
@@ -186,11 +187,11 @@ model ListingProduct {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([listingId])
-  @@index([productName])
+  @@index([productName]) // For fast product search
   @@map("listing_products")
 }
 
-// ─── Offers ──────────────────────────────────────────────────────────────────
+// ─── Offers ───────────────────────────────────────────────────────────────────
 
 model Offer {
   id          String   @id @default(uuid())
@@ -210,20 +211,20 @@ model Offer {
   @@map("offers")
 }
 
-// ─── Ratings ─────────────────────────────────────────────────────────────────
+// ─── Ratings ──────────────────────────────────────────────────────────────────
 
 model Rating {
   id           String   @id @default(uuid())
   pharmacistId String   @map("pharmacist_id")
   supplierId   String   @map("supplier_id")
-  score        Int
+  score        Int // 1-5
   comment      String?  @db.Text
   createdAt    DateTime @default(now()) @map("created_at")
 
-  pharmacist Profile @relation("RatingsGiven",    fields: [pharmacistId], references: [id], onDelete: Cascade)
-  supplier   Profile @relation("RatingsReceived", fields: [supplierId],   references: [id], onDelete: Cascade)
+  pharmacist Profile @relation("RatingsGiven", fields: [pharmacistId], references: [id], onDelete: Cascade)
+  supplier   Profile @relation("RatingsReceived", fields: [supplierId], references: [id], onDelete: Cascade)
 
-  @@unique([pharmacistId, supplierId])
+  @@unique([pharmacistId, supplierId]) // One rating per pharmacist per supplier
   @@index([supplierId])
   @@map("ratings")
 }
@@ -255,7 +256,7 @@ model ContactMessage {
   email     String
   subject   String
   message   String   @db.Text
-  status    String   @default("new")
+  status    String   @default("new") // new | read | replied
   createdAt DateTime @default(now()) @map("created_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)

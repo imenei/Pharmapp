@@ -9,6 +9,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getUploadDir } from '../common/uploads';
+import { isTrialActiveFromDate } from '../common/subscription-access';
 
 @Injectable()
 export class ListingsService {
@@ -20,6 +21,15 @@ export class ListingsService {
   ) {}
 
   private async ensureSupplierSubscriptionApproved(supplierId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: supplierId },
+      select: { role: true, status: true, createdAt: true },
+    });
+
+    if (user?.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt)) {
+      return;
+    }
+
     const activeSubscription = await this.prisma.subscriptionPayment.findFirst({
       where: {
         userId: supplierId,
@@ -38,6 +48,15 @@ export class ListingsService {
   }
 
   private async hasActiveGoldSubscription(supplierId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: supplierId },
+      select: { role: true, status: true, createdAt: true },
+    });
+
+    if (user?.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt)) {
+      return true;
+    }
+
     const payment = await this.prisma.subscriptionPayment.findFirst({
       where: {
         userId: supplierId,

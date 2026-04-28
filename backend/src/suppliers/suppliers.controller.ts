@@ -1,6 +1,6 @@
 // src/suppliers/suppliers.controller.ts
 import {
-  Controller, Get, Post, Patch, Param, Query, Body,
+  Controller, Get, Post, Patch, Delete, Param, Query, Body,
   UseGuards, UseInterceptors, UploadedFile, ParseIntPipe, DefaultValuePipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -105,6 +105,13 @@ export class SuppliersController {
   ) {
     const proofUrl = `/uploads/${file.filename}`;
     return this.service.submitSubscription(userId, dto.planId, proofUrl);
+  }
+
+  @Delete('me/subscription/pending')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('supplier')
+  deletePendingSubscription(@CurrentUser('id') userId: string) {
+    return this.service.deletePendingSubscription(userId);
   }
 
   @Get(':id')

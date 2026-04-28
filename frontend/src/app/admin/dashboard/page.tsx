@@ -30,6 +30,7 @@ export default function AdminDashboard() {
   const deleteUser = useDeleteUser();
   const toggleActive = useToggleUserActive();
   const markRead = useMarkMessageRead();
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const tabs: { key: Tab; label: string; icon: any; count?: number }[] = [
     { key: 'users', label: 'Utilisateurs', icon: Users, count: stats?.pendingUsers },
@@ -44,6 +45,26 @@ export default function AdminDashboard() {
            user.profile?.avatarUrl || 
            user.documents?.find((d: any) => d.type === 'registre_commerce')?.url ||
            null;
+  };
+
+  const handleApproveUser = async (id: string) => {
+    setFeedback(null);
+    try {
+      const response = await approveUser.mutateAsync(id);
+      setFeedback({ type: 'success', text: response?.message || 'Utilisateur approuve avec succes.' });
+    } catch (error: any) {
+      setFeedback({ type: 'error', text: error?.response?.data?.message || "Echec de l'approbation." });
+    }
+  };
+
+  const handleApprovePayment = async (id: string) => {
+    setFeedback(null);
+    try {
+      const response = await approvePayment.mutateAsync(id);
+      setFeedback({ type: 'success', text: response?.message || 'Paiement approuve avec succes.' });
+    } catch (error: any) {
+      setFeedback({ type: 'error', text: error?.response?.data?.message || "Echec de l'approbation du paiement." });
+    }
   };
 
   return (
@@ -64,6 +85,17 @@ export default function AdminDashboard() {
           <StatCard title="Nouveaux messages" value={stats?.newMessages ?? 0} icon={<MessageSquare size={22}/>} color="blue"/>
         </>}
       </div>
+
+      {feedback && (
+        <div className={clsx(
+          'rounded-xl border px-4 py-3 text-sm font-medium',
+          feedback.type === 'success'
+            ? 'border-green-200 bg-green-50 text-green-700'
+            : 'border-red-200 bg-red-50 text-red-700',
+        )}>
+          {feedback.text}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="card p-0 overflow-hidden">
@@ -141,9 +173,10 @@ export default function AdminDashboard() {
                           </a>
                         )}
                         {user.status === 'pending' && <>
-                          <button onClick={() => approveUser.mutate(user.id)}
+                          <button onClick={() => handleApproveUser(user.id)}
+                            disabled={approveUser.isPending}
                             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Approuver">
-                            <Check size={18}/>
+                            {approveUser.isPending ? <Spinner size="sm"/> : <Check size={18}/>}
                           </button>
                           <button onClick={() => rejectUser.mutate({ id: user.id })}
                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Refuser">
@@ -202,9 +235,9 @@ export default function AdminDashboard() {
                             <Eye size={14}/> Reçu
                           </a>
                           {pay.status === 'pending' && <>
-                            <button onClick={() => approvePayment.mutate(pay.id)} disabled={approvePayment.isPending}
+                            <button onClick={() => handleApprovePayment(pay.id)} disabled={approvePayment.isPending}
                               className="btn-primary text-sm px-3 py-1.5 bg-green-600 hover:bg-green-700 flex items-center gap-1">
-                              <Check size={14}/> Approuver
+                              {approvePayment.isPending ? <Spinner size="sm"/> : <Check size={14}/>} Approuver
                             </button>
                             <button onClick={() => rejectPayment.mutate({ id: pay.id })} disabled={rejectPayment.isPending}
                               className="btn-danger text-sm px-3 py-1.5 flex items-center gap-1">

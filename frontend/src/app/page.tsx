@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/providers';
 import { getDashboardPath } from '@/lib/auth';
 import api from '@/lib/api';
+import { getWelcomeTrialLabel } from '@/lib/subscription-offers';
 
 interface GoldSupplier { id: string; companyName: string; wilaya?: string; description?: string; avatarUrl?: string; }
 
@@ -146,6 +147,7 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [goldSuppliers, setGoldSuppliers] = useState<GoldSupplier[]>([]);
   const [suppliersLoading, setSuppliersLoading] = useState(true);
+  const trialLabel = getWelcomeTrialLabel();
 
   useEffect(() => {
     if (!loading && user) {
@@ -405,7 +407,7 @@ export default function Home() {
                 <span className="text-gray-400 text-sm ml-1">DZD / mois</span>
               </div>
               <ul className="space-y-2.5 mb-6">
-                {["Visibilité dans les résultats", "Semaine d'essai gratuite", "Fonctionnalités de base", "Support standard"].map(f => (
+                {["Visibilité dans les résultats", trialLabel, "Fonctionnalités de base", "Support standard"].map(f => (
                   <li key={f} className="flex items-center text-xs text-gray-600"><Icons.Check />{f}</li>
                 ))}
               </ul>
@@ -512,7 +514,7 @@ export default function Home() {
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
               <img 
-          src="/logo1.png" 
+          src="/logo3.png" 
           alt="PHARMA FLOW" 
           className="h-8 w-auto object-contain"
         />

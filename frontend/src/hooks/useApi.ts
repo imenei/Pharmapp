@@ -42,13 +42,26 @@ export const useSuppliers = (params: { wilaya?: string; search?: string; page?: 
   });
 
 export const useSupplier = (id: string) =>
-  useQuery({ queryKey: KEYS.supplier(id), queryFn: () => api.get(`/suppliers/${id}`).then(r => r.data), enabled: !!id });
+  useQuery({
+    queryKey: KEYS.supplier(id),
+    queryFn: () => api.get(`/suppliers/${id}`).then(r => r.data),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+  });
 
 export const useSupplierStats = () =>
-  useQuery({ queryKey: KEYS.supplierStats, queryFn: () => api.get('/suppliers/me/stats').then(r => r.data) });
+  useQuery({
+    queryKey: KEYS.supplierStats,
+    queryFn: () => api.get('/suppliers/me/stats').then(r => r.data),
+    staleTime: 60 * 1000,
+  });
 
 export const useSupplierSubscription = () =>
-  useQuery({ queryKey: KEYS.supplierSubscription, queryFn: () => api.get('/suppliers/me/subscription').then(r => r.data) });
+  useQuery({
+    queryKey: KEYS.supplierSubscription,
+    queryFn: () => api.get('/suppliers/me/subscription').then(r => r.data),
+    staleTime: 2 * 60 * 1000,
+  });
 
 export const useSubscriptionPlans = () =>
   useQuery<SubscriptionPlan[]>({ queryKey: KEYS.plans, queryFn: () => api.get('/suppliers/plans').then(r => r.data), staleTime: Infinity });
@@ -69,6 +82,14 @@ export const useSubmitSubscription = () => {
   });
 };
 
+export const useDeletePendingSubscription = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete('/suppliers/me/subscription/pending').then(r => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.supplierSubscription }),
+  });
+};
+
 export const useCreateRating = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -80,7 +101,11 @@ export const useCreateRating = () => {
 
 // ── Listings ─────────────────────────────────────────────────────────────────
 export const useMyListings = () =>
-  useQuery({ queryKey: KEYS.listings, queryFn: () => api.get('/listings/my').then(r => r.data) });
+  useQuery({
+    queryKey: KEYS.listings,
+    queryFn: () => api.get('/listings/my').then(r => r.data),
+    staleTime: 60 * 1000,
+  });
 
 export const useSearchListings = (products: string[], enabled: boolean) =>
   useQuery<{ data: Listing[]; total: number }>({
@@ -116,7 +141,11 @@ export const useOffers = (params: { search?: string; page?: number } = {}) =>
   });
 
 export const useMyOffers = () =>
-  useQuery({ queryKey: KEYS.myOffers, queryFn: () => api.get('/offers/my').then(r => r.data) });
+  useQuery({
+    queryKey: KEYS.myOffers,
+    queryFn: () => api.get('/offers/my').then(r => r.data),
+    staleTime: 60 * 1000,
+  });
 
 export const useCreateOffer = () => {
   const qc = useQueryClient();
@@ -139,7 +168,9 @@ export const useNotifications = (params: { limit?: number; unreadOnly?: boolean 
   useQuery({
     queryKey: KEYS.notifications(params),
     queryFn: () => api.get('/notifications', { params }).then(r => r.data),
-    refetchInterval: 60 * 1000, // Poll every 60s
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+    refetchIntervalInBackground: false,
   });
 
 export const useMarkNotificationRead = () => {
@@ -160,16 +191,37 @@ export const useMarkAllRead = () => {
 
 // ── Admin ────────────────────────────────────────────────────────────────────
 export const useAdminStats = () =>
-  useQuery({ queryKey: KEYS.adminStats, queryFn: () => api.get('/admin/stats').then(r => r.data), refetchInterval: 30 * 1000 });
+  useQuery({
+    queryKey: KEYS.adminStats,
+    queryFn: () => api.get('/admin/stats').then(r => r.data),
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+    refetchIntervalInBackground: false,
+  });
 
 export const useAdminUsers = (params: any = {}) =>
-  useQuery({ queryKey: KEYS.adminUsers(params), queryFn: () => api.get('/admin/users', { params }).then(r => r.data), placeholderData: (p: any) => p });
+  useQuery({
+    queryKey: KEYS.adminUsers(params),
+    queryFn: () => api.get('/admin/users', { params }).then(r => r.data),
+    placeholderData: (p: any) => p,
+    staleTime: 20 * 1000,
+  });
 
 export const useAdminPayments = (params: any = {}) =>
-  useQuery({ queryKey: KEYS.adminPayments(params), queryFn: () => api.get('/admin/payments', { params }).then(r => r.data), placeholderData: (p: any) => p });
+  useQuery({
+    queryKey: KEYS.adminPayments(params),
+    queryFn: () => api.get('/admin/payments', { params }).then(r => r.data),
+    placeholderData: (p: any) => p,
+    staleTime: 20 * 1000,
+  });
 
 export const useAdminMessages = (params: any = {}) =>
-  useQuery({ queryKey: KEYS.adminMessages(params), queryFn: () => api.get('/admin/messages', { params }).then(r => r.data), placeholderData: (p: any) => p });
+  useQuery({
+    queryKey: KEYS.adminMessages(params),
+    queryFn: () => api.get('/admin/messages', { params }).then(r => r.data),
+    placeholderData: (p: any) => p,
+    staleTime: 20 * 1000,
+  });
 
 export const useApproveUser = () => {
   const qc = useQueryClient();
@@ -228,4 +280,29 @@ export const useMarkMessageRead = () => {
 };
 
 export const usePharmacistDashboard = () =>
-  useQuery({ queryKey: KEYS.pharmacistDashboard, queryFn: () => api.get('/pharmacists/dashboard').then(r => r.data) });
+  useQuery({
+    queryKey: KEYS.pharmacistDashboard,
+    queryFn: () => api.get('/pharmacists/dashboard').then(r => r.data),
+    staleTime: 2 * 60 * 1000,
+  });
+
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: (data: { currentPassword: string; newPassword: string }) =>
+      api.post('/users/change-password', data).then(r => r.data),
+  });
+};
+
+export const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: (data: { email: string }) =>
+      api.post('/auth/forgot-password', data).then(r => r.data),
+  });
+};
+
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: (data: { token: string; newPassword: string }) =>
+      api.post('/auth/reset-password', data).then(r => r.data),
+  });
+};

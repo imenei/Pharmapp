@@ -54,3 +54,41 @@ export async function sendApprovalEmail(toEmail: string, companyName?: string) {
     `,
   });
 }
+
+export async function sendPasswordResetEmail(toEmail: string, resetUrl: string, companyName?: string) {
+  const transporter = getTransporter();
+  const sender = APPROVAL_CONTACT_EMAIL;
+
+  if (!transporter) {
+    logger.warn(`Skipping password reset email for ${toEmail}: Gmail credentials are not configured.`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: `"Plateforme PHARMA FLOW" <${sender}>`,
+    replyTo: sender,
+    to: toEmail,
+    subject: 'Reinitialisation de votre mot de passe',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px;border:1px solid #e5e7eb;border-radius:12px;">
+        <h2 style="color:#16a34a;">Bonjour ${companyName ?? ''}</h2>
+        <p style="font-size:16px;color:#374151;">
+          Nous avons recu une demande de reinitialisation de mot de passe pour votre compte Pharma Flow.
+        </p>
+        <p style="font-size:16px;color:#374151;">
+          Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Ce lien expire rapidement pour plus de securite.
+        </p>
+        <a href="${resetUrl}"
+           style="display:inline-block;margin-top:20px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold;">
+          Reinitialiser mon mot de passe
+        </a>
+        <p style="margin-top:24px;font-size:14px;color:#6b7280;">
+          Si vous n'etes pas a l'origine de cette demande, ignorez simplement cet email.
+        </p>
+        <p style="margin-top:30px;font-size:13px;color:#9ca3af;">
+          Besoin d'aide ? Contactez-nous a <a href="mailto:${sender}">${sender}</a>
+        </p>
+      </div>
+    `,
+  });
+}

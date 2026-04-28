@@ -1,8 +1,8 @@
-// src/admin/admin.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { sendApprovalEmail } from './mail.service'; // 👈 ajout
+import { sendApprovalEmail } from './mail.service';
+import { getTrialDaysForDate } from '../common/subscription-access';
 
 @Injectable()
 export class AdminService {
@@ -11,11 +11,14 @@ export class AdminService {
     private notifications: NotificationsService,
   ) {}
 
-  // ── Dashboard stats ────────────────────────────────────────────────────────
   async getDashboardStats() {
     const [
-      totalPharmacists, totalSuppliers, pendingUsers,
-      pendingPayments, newMessages, activeSubscriptions,
+      totalPharmacists,
+      totalSuppliers,
+      pendingUsers,
+      pendingPayments,
+      newMessages,
+      activeSubscriptions,
     ] = await Promise.all([
       this.prisma.user.count({ where: { role: 'pharmacist', status: 'approved' } }),
       this.prisma.user.count({ where: { role: 'supplier', status: 'approved' } }),
@@ -26,13 +29,21 @@ export class AdminService {
         where: { status: 'approved', isActive: true, subscriptionEnd: { gte: new Date() } },
       }),
     ]);
-    return { totalPharmacists, totalSuppliers, pendingUsers, pendingPayments, newMessages, activeSubscriptions };
+
+    return {
+      totalPharmacists,
+      totalSuppliers,
+      pendingUsers,
+      pendingPayments,
+      newMessages,
+      activeSubscriptions,
+    };
   }
 
-  // ── Users management ───────────────────────────────────────────────────────
   async getUsers(role?: string, status?: string, search?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const where: any = {};
+
     if (role) where.role = role;
     if (status) where.status = status;
     if (search) {
@@ -41,19 +52,35 @@ export class AdminService {
         { profile: { companyName: { contains: search, mode: 'insensitive' } } },
       ];
     }
+
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
-        where, skip, take: limit, orderBy: { createdAt: 'desc' },
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
         select: {
-          id: true, email: true, role: true, status: true, isActive: true, createdAt: true,
+          id: true,
+          email: true,
+          role: true,
+          status: true,
+          isActive: true,
+          createdAt: true,
           profile: {
             select: {
-              companyName: true, wilaya: true, phone: true, avatarUrl: true,
-              registerUrl: true, // ← ajouté
+              companyName: true,
+              wilaya: true,
+              phone: true,
+              avatarUrl: true,
+              registerUrl: true,
               subscriptionPayments: {
                 where: { status: 'approved', isActive: true },
-                select: { subscriptionPlan: { select: { name: true, tier: true } }, subscriptionEnd: true },
-                take: 1, orderBy: { createdAt: 'desc' },
+                select: {
+                  subscriptionPlan: { select: { name: true, tier: true } },
+                  subscriptionEnd: true,
+                },
+                take: 1,
+                orderBy: { createdAt: 'desc' },
               },
             },
           },
@@ -61,6 +88,7 @@ export class AdminService {
       }),
       this.prisma.user.count({ where }),
     ]);
+
     return { data: users, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
@@ -71,63 +99,63 @@ export class AdminService {
       select: {
         email: true,
         role: true,
-        profile: { select: { companyName: true } }, // 👈 récupère le nom
+        profile: { select: { companyName: true } },
       },
     });
 
-    // Notification in-app
     await this.notifications.create(
       userId,
-      'Compte approuvé ✅',
+      'Compte approuvé',
       'Votre compte a été approuvé. Vous pouvez maintenant vous connecter.',
       'success',
     );
 
-    // Email 👇
-    try {
-      await sendApprovalEmail(user.email, user.profile?.companyName ?? undefined);
-    } catch (err) {
+    void sendApprovalEmail(user.email, user.profile?.companyName ?? undefined).catch((err) => {
       console.error('Erreur envoi email approbation:', err);
-      // Ne bloque pas la réponse si l'email échoue
-    }
+    });
 
-    return { message: 'Utilisateur approuvé', user };
+    return { message: 'Utilisateur approuve avec succes.', user };
   }
 
   async rejectUser(userId: string, reason?: string) {
     await this.prisma.user.update({ where: { id: userId }, data: { status: 'rejected' } });
     await this.notifications.create(
       userId,
-      'Compte refusé',
-      reason || "Votre demande d'inscription a été refusée.",
+      'Compte refuse',
+      reason || "Votre demande d'inscription a ete refusee.",
       'error',
     );
-    return { message: 'Utilisateur refusé' };
+    return { message: 'Utilisateur refuse' };
   }
 
   async toggleUserActive(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable');
+
     const updated = await this.prisma.user.update({
       where: { id: userId },
       data: { isActive: !user.isActive },
     });
+
     return { isActive: updated.isActive };
   }
 
   async deleteUser(userId: string) {
     await this.prisma.user.delete({ where: { id: userId } });
-    return { message: 'Utilisateur supprimé' };
+    return { message: 'Utilisateur supprime' };
   }
 
-  // ── Subscription payments ──────────────────────────────────────────────────
   async getPayments(status?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const where: any = {};
     if (status) where.status = status;
+
     const [payments, total] = await Promise.all([
       this.prisma.subscriptionPayment.findMany({
-        where, skip, take: limit, orderBy: { createdAt: 'desc' },
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
         include: {
           profile: { select: { companyName: true, user: { select: { email: true } } } },
           subscriptionPlan: { select: { name: true, tier: true, price: true, durationDays: true } },
@@ -135,6 +163,7 @@ export class AdminService {
       }),
       this.prisma.subscriptionPayment.count({ where }),
     ]);
+
     return { data: payments, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
@@ -146,8 +175,16 @@ export class AdminService {
     if (!payment) throw new NotFoundException('Paiement introuvable');
 
     const start = new Date();
-    const end = new Date();
-    end.setDate(end.getDate() + payment.subscriptionPlan.durationDays);
+    const previousApprovedCount = await this.prisma.subscriptionPayment.count({
+      where: {
+        userId: payment.userId,
+        status: 'approved',
+      },
+    });
+    const welcomeTrialDays = previousApprovedCount === 0 ? getTrialDaysForDate(start) : 0;
+
+    const end = new Date(start);
+    end.setDate(end.getDate() + payment.subscriptionPlan.durationDays + welcomeTrialDays);
 
     await this.prisma.subscriptionPayment.updateMany({
       where: { userId: payment.userId, isActive: true },
@@ -156,16 +193,27 @@ export class AdminService {
 
     const updated = await this.prisma.subscriptionPayment.update({
       where: { id: paymentId },
-      data: { status: 'approved', isActive: true, subscriptionStart: start, subscriptionEnd: end },
+      data: {
+        status: 'approved',
+        isActive: true,
+        subscriptionStart: start,
+        subscriptionEnd: end,
+      },
     });
 
     await this.notifications.create(
       payment.userId,
-      'Abonnement activé ✅',
-      `Votre abonnement ${payment.subscriptionPlan.name} est actif jusqu'au ${end.toLocaleDateString('fr-DZ')}.`,
+      'Abonnement active',
+      `Votre abonnement ${payment.subscriptionPlan.name} est actif jusqu'au ${end.toLocaleDateString('fr-DZ')}.${welcomeTrialDays ? ` Offre de bienvenue incluse : ${welcomeTrialDays} jours offerts.` : ''}`,
       'success',
     );
-    return updated;
+
+    return {
+      ...updated,
+      message: welcomeTrialDays
+        ? `Paiement approuve. ${welcomeTrialDays} jours offerts ont ete ajoutes a ce premier abonnement.`
+        : 'Paiement approuve avec succes.',
+    };
   }
 
   async rejectPayment(paymentId: string, reason?: string) {
@@ -173,24 +221,32 @@ export class AdminService {
       where: { id: paymentId },
       data: { status: 'rejected' },
     });
+
     await this.notifications.create(
       payment.userId,
-      'Paiement refusé',
-      reason || "Votre preuve de paiement a été refusée. Veuillez recontacter l'administrateur.",
+      'Paiement refuse',
+      reason || "Votre preuve de paiement a ete refusee. Veuillez recontacter l'administrateur.",
       'error',
     );
+
     return payment;
   }
 
-  // ── Contact messages ───────────────────────────────────────────────────────
   async getMessages(status?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const where: any = {};
     if (status) where.status = status;
+
     const [messages, total] = await Promise.all([
-      this.prisma.contactMessage.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.contactMessage.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
       this.prisma.contactMessage.count({ where }),
     ]);
+
     return { data: messages, total, page, limit };
   }
 
@@ -200,10 +256,9 @@ export class AdminService {
 
   async deleteMessage(id: string) {
     await this.prisma.contactMessage.delete({ where: { id } });
-    return { message: 'Message supprimé' };
+    return { message: 'Message supprime' };
   }
 
-  // ── Subscription plans CRUD ────────────────────────────────────────────────
   async getPlans() {
     return this.prisma.subscriptionPlan.findMany({ orderBy: { price: 'desc' } });
   }
@@ -215,7 +270,10 @@ export class AdminService {
   async updateSubscriptionDates(paymentId: string, startDate: string, endDate: string) {
     return this.prisma.subscriptionPayment.update({
       where: { id: paymentId },
-      data: { subscriptionStart: new Date(startDate), subscriptionEnd: new Date(endDate) },
+      data: {
+        subscriptionStart: new Date(startDate),
+        subscriptionEnd: new Date(endDate),
+      },
     });
   }
 }

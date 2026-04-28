@@ -59,6 +59,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('accessToken');
     if (token) refresh();
     else setLoading(false);
+
+    const handleLogout = () => {
+      setUser(null);
+      setLoading(false);
+    };
+
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
   }, []);
 
   return (
