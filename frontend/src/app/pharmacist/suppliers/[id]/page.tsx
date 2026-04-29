@@ -82,9 +82,9 @@ export default function SupplierDetailPage() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 mt-5 pt-5 border-t border-gray-100">
           {[
-            { label: 'Listings', value: supplier._count?.listings ?? 0, icon: '📋' },
-            { label: 'Offres actives', value: supplier._count?.offers ?? 0, icon: '🎁' },
-            { label: 'Avis', value: supplier._count?.ratingsReceived ?? 0, icon: '⭐' },
+            { label: 'Listings', value: supplier._count?.listings ?? 0, icon: '' },
+            { label: 'Offres actives', value: supplier._count?.offers ?? 0, icon: '' },
+            { label: 'Avis', value: supplier._count?.ratingsReceived ?? 0, icon: '' },
           ].map(({ label, value, icon }) => (
             <div key={label} className="text-center">
               <p className="text-2xl font-bold text-gray-900">{icon} {value}</p>
