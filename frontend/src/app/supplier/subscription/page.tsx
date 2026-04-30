@@ -24,6 +24,7 @@ export default function SupplierSubscriptionPage() {
   const submit = useSubmitSubscription();
   const deletePending = useDeletePendingSubscription();
   const proofRef = useRef<HTMLInputElement>(null);
+
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -34,7 +35,13 @@ export default function SupplierSubscriptionPage() {
     (currentSub?.accessGranted || currentSub?.isActive) &&
     currentSub?.subscriptionEnd &&
     new Date(currentSub.subscriptionEnd) > new Date();
-  const isPendingReview = currentSub && !currentSub.trialActive && !currentSub.isActive && currentSub.status === 'pending';
+
+  const isPendingReview =
+    currentSub &&
+    !currentSub.trialActive &&
+    !currentSub.isActive &&
+    currentSub.status === 'pending';
+
   const trialLabel = getWelcomeTrialLabel();
 
   const renderFeature = (feature: string) => {
@@ -61,9 +68,7 @@ export default function SupplierSubscriptionPage() {
       setProofFile(null);
       setSelectedPlan(null);
       setStep('plans');
-      if (proofRef.current) {
-        proofRef.current.value = '';
-      }
+      if (proofRef.current) proofRef.current.value = '';
     } catch (e: any) {
       setMsg(e.response?.data?.message || 'Erreur');
     }
@@ -74,9 +79,7 @@ export default function SupplierSubscriptionPage() {
       const response = await deletePending.mutateAsync();
       setMsg(response?.message || 'Preuve supprimee.');
       setProofFile(null);
-      if (proofRef.current) {
-        proofRef.current.value = '';
-      }
+      if (proofRef.current) proofRef.current.value = '';
     } catch (e: any) {
       setMsg(e.response?.data?.message || 'Impossible de supprimer la preuve.');
     }
@@ -109,7 +112,9 @@ export default function SupplierSubscriptionPage() {
                 Actif jusqu&apos;au <strong>{new Date(currentSub.subscriptionEnd).toLocaleDateString('fr-DZ')}</strong>
               </p>
               {currentSub?.trialActive && (
-                <p className="mt-1 text-sm text-emerald-700">Votre acces gratuit est actuellement actif.</p>
+                <p className="mt-1 text-sm text-emerald-700">
+                  Votre acces gratuit est actuellement actif. Consultez ci-dessous les abonnements disponibles apres cette periode.
+                </p>
               )}
             </div>
           </div>
@@ -143,7 +148,7 @@ export default function SupplierSubscriptionPage() {
               <button
                 onClick={handleDeletePending}
                 disabled={deletePending.isPending}
-                className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 disabled:opacity-60"
+                className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-60"
               >
                 {deletePending.isPending ? <Spinner size="sm" /> : <Trash2 size={16} />}
                 Supprimer le recu
@@ -155,11 +160,15 @@ export default function SupplierSubscriptionPage() {
 
       {!isPendingReview && step === 'plans' ? (
         <>
+          <div className="text-center text-sm text-gray-500">
+            Consultez librement nos differentes offres d&apos;abonnement et leurs avantages.
+          </div>
+
           <div className="flex items-center justify-center gap-4">
             <span className={billing === 'monthly' ? 'font-semibold text-gray-900' : 'text-gray-500'}>Mensuel</span>
             <button
               onClick={() => setBilling((b) => (b === 'monthly' ? 'yearly' : 'monthly'))}
-              className={`relative h-6 w-12 rounded-full transition-colors ${billing === 'yearly' ? 'bg-blue-600' : 'bg-gray-200'}`}
+              className={`relative h-6 w-12 rounded-full ${billing === 'yearly' ? 'bg-blue-600' : 'bg-gray-200'}`}
             >
               <span
                 className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${billing === 'yearly' ? 'translate-x-6' : ''}`}
@@ -176,19 +185,24 @@ export default function SupplierSubscriptionPage() {
             <div className="grid gap-5 sm:grid-cols-3">
               {plans.map((plan: any) => {
                 const price = billing === 'yearly' ? plan.yearlyPrice : plan.price;
+
                 return (
                   <div
                     key={plan.id}
                     onClick={() => setSelectedPlan(plan.id)}
-                    className={`card relative cursor-pointer border-2 transition-all hover:shadow-lg ${selectedPlan === plan.id ? 'border-blue-600 shadow-lg shadow-blue-100' : 'border-gray-200'}`}
+                    className={`card relative cursor-pointer border-2 transition-all hover:shadow-lg ${
+                      selectedPlan === plan.id ? 'border-blue-600 shadow-lg shadow-blue-100' : 'border-gray-200'
+                    }`}
                   >
                     <div className={`-mx-6 -mt-6 mb-4 h-2 rounded-t-lg bg-gradient-to-r ${TIER_GRADIENT[plan.tier] ?? 'from-gray-300 to-gray-400'}`} />
                     <TierBadge tier={plan.tier} />
                     <h3 className="mb-1 mt-3 text-xl font-bold text-gray-900">Plan {plan.name}</h3>
+
                     <div className="mb-4">
                       <span className="text-3xl font-bold text-gray-900">{price.toLocaleString()} DA</span>
                       <span className="text-sm text-gray-500"> / {billing === 'yearly' ? 'an' : 'mois'}</span>
                     </div>
+
                     <ul className="mb-5 space-y-2">
                       {plan.features.map((f: string, i: number) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -197,13 +211,14 @@ export default function SupplierSubscriptionPage() {
                         </li>
                       ))}
                     </ul>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedPlan(plan.id);
                         setStep('payment');
                       }}
-                      className={`${selectedPlan === plan.id ? 'btn-primary' : 'btn-secondary'} w-full rounded-lg py-2.5 text-sm font-medium transition-colors`}
+                      className={`${selectedPlan === plan.id ? 'btn-primary' : 'btn-secondary'} w-full rounded-lg py-2.5 text-sm font-medium`}
                     >
                       Choisir ce plan
                     </button>
@@ -218,7 +233,9 @@ export default function SupplierSubscriptionPage() {
           <button onClick={() => setStep('plans')} className="text-sm text-blue-600 hover:underline">
             Retour aux plans
           </button>
+
           <h2 className="text-lg font-bold text-gray-900">Soumettre votre paiement</h2>
+
           <div className="space-y-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
             <div>
               <p className="font-semibold">Titre : Pharma Flow</p>
@@ -237,12 +254,12 @@ export default function SupplierSubscriptionPage() {
               <p className="font-semibold">Instructions :</p>
               <p>1. Effectuez le virement depuis votre banque</p>
               <p>
-                2. Montant :{' '}
+                2. Montant :
                 <strong>
+                  {' '}
                   {billing === 'yearly'
                     ? plans.find((p: any) => p.id === selectedPlan)?.yearlyPrice?.toLocaleString()
-                    : plans.find((p: any) => p.id === selectedPlan)?.price?.toLocaleString()}{' '}
-                  DA
+                    : plans.find((p: any) => p.id === selectedPlan)?.price?.toLocaleString()} DA
                 </strong>
               </p>
               <p>3. Prenez une capture du recu</p>
@@ -254,7 +271,7 @@ export default function SupplierSubscriptionPage() {
             <label className="label">Deposer le recu de virement *</label>
             <div
               onClick={() => proofRef.current?.click()}
-              className="cursor-pointer rounded-xl border-2 border-dashed border-gray-300 p-6 text-center transition-colors hover:border-blue-400 hover:bg-blue-50"
+              className="cursor-pointer rounded-xl border-2 border-dashed border-gray-300 p-6 text-center hover:border-blue-400 hover:bg-blue-50"
             >
               {proofFile ? (
                 <div>
@@ -270,6 +287,7 @@ export default function SupplierSubscriptionPage() {
                 </div>
               )}
             </div>
+
             <input
               ref={proofRef}
               type="file"
