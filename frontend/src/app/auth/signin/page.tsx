@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/providers';
 export default function SigninPage() {
   const router = useRouter();
   const { setUser } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
@@ -20,14 +21,35 @@ export default function SigninPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
       const user = await login(email, password);
-      document.cookie = `accessToken=${localStorage.getItem('accessToken')}; path=/; max-age=900`;
+
+      // 🔐 Safe token handling
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        document.cookie = `accessToken=${token}; path=/; max-age=900`;
+      }
+
+      // 👤 Set user in context
       setUser(user);
-      if (user.status !== 'approved' && user.role !== 'admin') router.push('/waiting-approval');
-      else router.push(getDashboardPath(user.role));
+
+      // 🚀 Safe navigation (avoid React race issues)
+      setTimeout(() => {
+        if (user.status !== 'approved' && user.role !== 'admin') {
+          router.push('/waiting-approval');
+        } else {
+          router.push(getDashboardPath(user.role));
+        }
+      }, 0);
+
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Email ou mot de passe incorrect');
+      // ⚠️ Fully safe error handling
+      setError(
+        err?.response?.data?.message ||
+        err?.message ||
+        'Email ou mot de passe incorrect'
+      );
     } finally {
       setLoading(false);
     }
@@ -35,35 +57,48 @@ export default function SigninPage() {
 
   return (
     <div className="min-h-screen bg-[#E8F5E9] flex flex-col">
+
+      {/* HEADER */}
       <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/logo3.png" alt="PHARMA FLOW" className="h-9 w-9 rounded-xl object-cover" />
-            <img 
-  src="/1 (2).png" 
-  alt="PHARMA FLOW" 
-  className="h-8 w-auto object-contain"
-/>
+            <img src="/1 (2).png" alt="PHARMA FLOW" className="h-8 w-auto object-contain" />
           </div>
+
           <nav className="hidden md:flex space-x-8 text-sm text-gray-600">
-            <Link href="/" className="hover:text-[#2E7D32] transition-colors">Accueil</Link>
-            <Link href="/auth/signup" className="hover:text-[#2E7D32] transition-colors">Inscription</Link>
+            <Link href="/" className="hover:text-[#2E7D32] transition-colors">
+              Accueil
+            </Link>
+            <Link href="/auth/signup" className="hover:text-[#2E7D32] transition-colors">
+              Inscription
+            </Link>
           </nav>
         </div>
       </header>
 
+      {/* MAIN */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
+
           <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] p-8">
+
+            {/* TITLE */}
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-[#E8F5E9] rounded-2xl mb-4">
                 <img src="/logo3.png" alt="PHARMA FLOW" className="h-12 w-12 rounded-xl object-cover" />
               </div>
+
               <h2 className="text-2xl font-bold text-[#2E7D32]">Connexion</h2>
-              <p className="text-gray-500 text-sm mt-1">Accedez a votre espace professionnel</p>
+              <p className="text-gray-500 text-sm mt-1">
+                Accedez a votre espace professionnel
+              </p>
             </div>
 
+            {/* FORM */}
             <form onSubmit={handleSubmit} className="space-y-5">
+
+              {/* EMAIL */}
               <div>
                 <label className="label">Adresse email</label>
                 <input
@@ -77,8 +112,10 @@ export default function SigninPage() {
                 />
               </div>
 
+              {/* PASSWORD */}
               <div>
                 <label className="label">Mot de passe</label>
+
                 <div className="relative">
                   <input
                     type={showPwd ? 'text' : 'password'}
@@ -88,6 +125,7 @@ export default function SigninPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPwd(!showPwd)}
@@ -96,46 +134,67 @@ export default function SigninPage() {
                     {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+
                 <div className="mt-2 text-right">
-                  <Link href="/auth/forgot-password" className="text-sm font-medium text-[#2E7D32] hover:text-[#1B5E20] hover:underline">
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-sm font-medium text-[#2E7D32] hover:text-[#1B5E20] hover:underline"
+                  >
                     Mot de passe oublie ?
                   </Link>
                 </div>
               </div>
 
+              {/* ERROR */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
                   {error}
                 </div>
               )}
 
-              <button type="submit" className="btn-primary w-full py-3 text-base" disabled={loading}>
+              {/* BUTTON */}
+              <button
+                type="submit"
+                className="btn-primary w-full py-3 text-base disabled:opacity-60"
+                disabled={loading || !email || !password}
+              >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Connexion...
                   </span>
-                ) : 'Se connecter'}
+                ) : (
+                  'Se connecter'
+                )}
               </button>
+
             </form>
 
+            {/* FOOTER */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Pas encore de compte ?{' '}
-                <Link href="/auth/signup" className="text-[#2E7D32] font-semibold hover:text-[#1B5E20] hover:underline">
+                <Link
+                  href="/auth/signup"
+                  className="text-[#2E7D32] font-semibold hover:text-[#1B5E20] hover:underline"
+                >
                   S&apos;inscrire gratuitement
                 </Link>
               </p>
             </div>
+
           </div>
 
-         
         </div>
       </main>
 
+      {/* FOOTER */}
       <footer className="bg-white border-t border-gray-100 py-6">
-        <p className="text-center text-sm text-gray-500">© 2026 PHARMA FLOW · Tous droits reserves</p>
+        <p className="text-center text-sm text-gray-500">
+          © 2026 PHARMA FLOW · Tous droits reserves
+        </p>
       </footer>
+
     </div>
   );
 }
