@@ -449,7 +449,7 @@ export default function Home() {
                 <span className="font-bold text-gray-800">Or</span>
               </div>
               <div className="mb-5">
-                <span className="text-3xl font-bold text-gray-900">25 000</span>
+                <span className="text-3xl font-bold text-gray-900">20 000</span>
                 <span className="text-gray-400 text-sm ml-1">DZD / mois</span>
               </div>
               <ul className="space-y-2.5 mb-6">

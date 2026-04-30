@@ -326,9 +326,9 @@ export default function SignUpPage() {
             <div>
               <strong className="text-[#2E7D32]">Information importante :</strong>
               <ul className="mt-2 list-inside list-disc space-y-1 text-gray-600">
-                <li>Votre compte sera examine apres verification de votre registre de commerce.</li>
-                <li>Le registre doit etre un scan clair et lisible du document officiel.</li>
-                <li>Vous serez notifie une fois votre compte approuve.</li>
+                <li>Votre compte sera examiné après vérification de votre registre du commerce.</li>
+                <li>Le registre doit être un scan clair et lisible du document officiel.</li>
+                <li>Vous serez notifié(e) une fois votre compte approuvé.</li>
               </ul>
             </div>
           </div>
