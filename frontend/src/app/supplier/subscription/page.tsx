@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Crown, Check, Upload, Lock, Trash2, Eye } from 'lucide-react';
+import { Crown, Check, Upload, Lock, Trash2, Eye, Star } from 'lucide-react';
 import {
   useSubscriptionPlans,
   useSupplierSubscription,
@@ -42,12 +42,12 @@ export default function SupplierSubscriptionPage() {
     !currentSub.isActive &&
     currentSub.status === 'pending';
 
+  const isRealPaidSubscription = isSubActive && !currentSub?.trialActive;
+
   const trialLabel = getWelcomeTrialLabel();
 
   const renderFeature = (feature: string) => {
-    if (/essai|gratuite|gratuit/i.test(feature)) {
-      return trialLabel;
-    }
+    if (/essai|gratuite|gratuit/i.test(feature)) return trialLabel;
     return feature;
   };
 
@@ -86,10 +86,10 @@ export default function SupplierSubscriptionPage() {
   };
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Abonnement</h1>
-        <p className="text-gray-500 text-sm">Choisissez votre plan et gerez votre preuve de paiement.</p>
+        <h1 className="text-2xl font-bold text-gray-900">Abonnement Fournisseur</h1>
+        <p className="text-gray-500 text-sm">Consultez nos offres et choisissez la formule adaptee a votre activite.</p>
       </div>
 
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
@@ -113,7 +113,12 @@ export default function SupplierSubscriptionPage() {
               </p>
               {currentSub?.trialActive && (
                 <p className="mt-1 text-sm text-emerald-700">
-                  Votre acces gratuit est actuellement actif. Consultez ci-dessous les abonnements disponibles apres cette periode.
+                  Votre acces gratuit est actif. Vous pouvez consulter et anticiper votre prochain abonnement.
+                </p>
+              )}
+              {isRealPaidSubscription && (
+                <p className="mt-1 text-sm text-blue-700">
+                  Votre abonnement payant est deja actif. Les offres ci-dessous sont consultables pour votre prochain renouvellement.
                 </p>
               )}
             </div>
@@ -161,7 +166,7 @@ export default function SupplierSubscriptionPage() {
       {!isPendingReview && step === 'plans' ? (
         <>
           <div className="text-center text-sm text-gray-500">
-            Consultez librement nos differentes offres d&apos;abonnement et leurs avantages.
+            Comparez librement les differents abonnements, tarifs et avantages disponibles.
           </div>
 
           <div className="flex items-center justify-center gap-4">
@@ -170,65 +175,82 @@ export default function SupplierSubscriptionPage() {
               onClick={() => setBilling((b) => (b === 'monthly' ? 'yearly' : 'monthly'))}
               className={`relative h-6 w-12 rounded-full ${billing === 'yearly' ? 'bg-blue-600' : 'bg-gray-200'}`}
             >
-              <span
-                className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${billing === 'yearly' ? 'translate-x-6' : ''}`}
-              />
+              <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${billing === 'yearly' ? 'translate-x-6' : ''}`} />
             </button>
             <span className={billing === 'yearly' ? 'font-semibold text-gray-900' : 'text-gray-500'}>Annuel</span>
           </div>
 
           {plansLoading ? (
-            <div className="flex justify-center py-8">
-              <Spinner size="lg" />
-            </div>
+            <div className="flex justify-center py-8"><Spinner size="lg" /></div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-3">
               {plans.map((plan: any) => {
                 const price = billing === 'yearly' ? plan.yearlyPrice : plan.price;
 
                 return (
                   <div
                     key={plan.id}
-                    onClick={() => setSelectedPlan(plan.id)}
-                    className={`card relative cursor-pointer border-2 transition-all hover:shadow-lg ${
-                      selectedPlan === plan.id ? 'border-blue-600 shadow-lg shadow-blue-100' : 'border-gray-200'
+                    className={`relative overflow-hidden rounded-2xl border-2 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl ${
+                      selectedPlan === plan.id ? 'border-blue-600 shadow-blue-100' : 'border-gray-200'
                     }`}
+                    onClick={() => setSelectedPlan(plan.id)}
                   >
-                    <div className={`-mx-6 -mt-6 mb-4 h-2 rounded-t-lg bg-gradient-to-r ${TIER_GRADIENT[plan.tier] ?? 'from-gray-300 to-gray-400'}`} />
-                    <TierBadge tier={plan.tier} />
-                    <h3 className="mb-1 mt-3 text-xl font-bold text-gray-900">Plan {plan.name}</h3>
+                    {plan.tier === 'gold' && (
+                      <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-white">
+                        <Star size={12} /> Recommande
+                      </div>
+                    )}
 
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold text-gray-900">{price.toLocaleString()} DA</span>
-                      <span className="text-sm text-gray-500"> / {billing === 'yearly' ? 'an' : 'mois'}</span>
+                    <div className={`absolute left-0 top-0 h-2 w-full bg-gradient-to-r ${TIER_GRADIENT[plan.tier]}`} />
+
+                    <div className="mt-3">
+                      <TierBadge tier={plan.tier} />
+                      <h3 className="mb-1 mt-3 text-xl font-bold text-gray-900">Plan {plan.name}</h3>
+
+                      <div className="mb-4">
+                        <span className="text-3xl font-bold text-gray-900">{price.toLocaleString()} DA</span>
+                        <span className="text-sm text-gray-500"> / {billing === 'yearly' ? 'an' : 'mois'}</span>
+                      </div>
+
+                      <ul className="mb-6 space-y-2">
+                        {plan.features.map((f: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                            <Check size={14} className="mt-0.5 shrink-0 text-green-500" />
+                            <span>{renderFeature(f)}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isRealPaidSubscription) {
+                            setSelectedPlan(plan.id);
+                            setStep('payment');
+                          }
+                        }}
+                        className={`w-full rounded-lg py-2.5 text-sm font-medium ${
+                          isRealPaidSubscription
+                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                            : selectedPlan === plan.id
+                            ? 'btn-primary'
+                            : 'btn-secondary'
+                        }`}
+                      >
+                        {isRealPaidSubscription
+                          ? 'Consultation uniquement'
+                          : currentSub?.trialActive
+                          ? 'Souscrire a l’avance'
+                          : 'Choisir ce plan'}
+                      </button>
                     </div>
-
-                    <ul className="mb-5 space-y-2">
-                      {plan.features.map((f: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                          <Check size={14} className="mt-0.5 shrink-0 text-green-500" />
-                          <span>{renderFeature(f)}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedPlan(plan.id);
-                        setStep('payment');
-                      }}
-                      className={`${selectedPlan === plan.id ? 'btn-primary' : 'btn-secondary'} w-full rounded-lg py-2.5 text-sm font-medium`}
-                    >
-                      Choisir ce plan
-                    </button>
                   </div>
                 );
               })}
             </div>
           )}
         </>
-      ) : !isPendingReview ? (
+      ) : !isPendingReview && !isRealPaidSubscription ? (
         <div className="card mx-auto max-w-lg space-y-5">
           <button onClick={() => setStep('plans')} className="text-sm text-blue-600 hover:underline">
             Retour aux plans
@@ -237,34 +259,7 @@ export default function SupplierSubscriptionPage() {
           <h2 className="text-lg font-bold text-gray-900">Soumettre votre paiement</h2>
 
           <div className="space-y-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-            <div>
-              <p className="font-semibold">Titre : Pharma Flow</p>
-              <p>Paiement par virement bancaire</p>
-            </div>
-
-            <div className="space-y-1">
-              <p><span className="font-semibold">Nom du beneficiaire :</span> Pharma Flow</p>
-              <p className="font-semibold">Coordonnees bancaires :</p>
-              <p><span className="font-medium">Banque :</span> BDL Algerie</p>
-              <p><span className="font-medium">RIB :</span> 123 456 789 000</p>
-              <p><span className="font-medium">SWIFT :</span> BNALDZAL</p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="font-semibold">Instructions :</p>
-              <p>1. Effectuez le virement depuis votre banque</p>
-              <p>
-                2. Montant :
-                <strong>
-                  {' '}
-                  {billing === 'yearly'
-                    ? plans.find((p: any) => p.id === selectedPlan)?.yearlyPrice?.toLocaleString()
-                    : plans.find((p: any) => p.id === selectedPlan)?.price?.toLocaleString()} DA
-                </strong>
-              </p>
-              <p>3. Prenez une capture du recu</p>
-              <p>4. Telechargez-la sur la plateforme</p>
-            </div>
+            <p>Effectuez votre virement bancaire puis telechargez votre recu ci-dessous.</p>
           </div>
 
           <div>
@@ -277,13 +272,11 @@ export default function SupplierSubscriptionPage() {
                 <div>
                   <Upload size={28} className="mx-auto mb-2 text-blue-600" />
                   <p className="font-medium text-gray-900">{proofFile.name}</p>
-                  <p className="text-xs text-gray-500">{(proofFile.size / 1024 / 1024).toFixed(2)} MB</p>
                 </div>
               ) : (
                 <div>
                   <Upload size={28} className="mx-auto mb-2 text-gray-400" />
                   <p className="text-gray-600">Choisir un fichier</p>
-                  <p className="mt-1 text-xs text-gray-500">PDF, JPG ou PNG (max 10 MB)</p>
                 </div>
               )}
             </div>
