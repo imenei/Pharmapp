@@ -57,10 +57,11 @@ export class ListingsController {
   @Roles('pharmacist', 'admin')
   search(
     @Body('products') products: string[],
+    @Body('wilaya') wilaya?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit = 20,
   ) {
-    return this.service.searchByProducts(products, page, limit);
+    return this.service.searchByProducts(products, wilaya, page, limit);
   }
 
   // ── Supplier: get own listings ─────────────────────────────────────────────

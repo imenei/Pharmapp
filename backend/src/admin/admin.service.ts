@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { sendApprovalEmail } from './mail.service';
-import { getTrialDaysForDate } from '../common/subscription-access';
+import { getTrialDaysForDate, isLaunchPromoActive } from '../common/subscription-access';
 
 @Injectable()
 export class AdminService {
@@ -181,7 +181,8 @@ export class AdminService {
         status: 'approved',
       },
     });
-    const welcomeTrialDays = previousApprovedCount === 0 ? getTrialDaysForDate(start) : 0;
+    const welcomeTrialDays =
+      previousApprovedCount === 0 && !isLaunchPromoActive(start) ? getTrialDaysForDate(start) : 0;
 
     const end = new Date(start);
     end.setDate(end.getDate() + payment.subscriptionPlan.durationDays + welcomeTrialDays);
@@ -247,7 +248,7 @@ export class AdminService {
       this.prisma.contactMessage.count({ where }),
     ]);
 
-    return { data: messages, total, page, limit };
+    return { data: messages, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async markMessageRead(id: string) {

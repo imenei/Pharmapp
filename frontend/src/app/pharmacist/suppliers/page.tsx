@@ -1,7 +1,7 @@
 'use client';
 // src/app/pharmacist/suppliers/page.tsx
 import { useState } from 'react';
-import { Search, MapPin, Package, Gift } from 'lucide-react';
+import { Search, MapPin, Package, Gift, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useSuppliers, useWilayas } from '@/hooks/useApi';
 import { Avatar, Stars, CardSkeleton, Empty, Pagination } from '@/components/ui';
@@ -71,6 +71,10 @@ export default function SuppliersPage() {
                 {supplier.description && (
                   <p className="text-sm text-gray-600 line-clamp-2 mb-3">{supplier.description}</p>
                 )}
+                <div className="space-y-1 text-xs text-gray-500 mb-3">
+                  {supplier.phone && <p className="flex items-center gap-1"><Phone size={12} />{supplier.phone}</p>}
+                  {supplier.email && <p className="flex items-center gap-1 truncate"><Mail size={12} />{supplier.email}</p>}
+                </div>
 
                 <div className="flex items-center gap-4 text-sm text-gray-500 pt-3 border-t border-gray-100">
                   <div className="flex items-center gap-1">

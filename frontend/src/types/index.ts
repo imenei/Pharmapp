@@ -22,6 +22,7 @@ export interface Supplier {
   companyName: string;
   address?: string;
   wilaya?: string;
+  phone?: string;
   avatarUrl?: string;
   description?: string;
   email?: string;
@@ -45,8 +46,12 @@ export interface Listing {
   supplier?: {
     id: string;
     name: string;
+    address?: string;
     wilaya?: string;
+    phone?: string;
     avatarUrl?: string;
+    description?: string;
+    email?: string;
     tier?: string | null;
   };
   matchingProducts?: { productName: string; price?: number; quantity?: number }[];
@@ -66,8 +71,11 @@ export interface Offer {
   supplier: {
     id: string;
     name: string;
+    address?: string;
     wilaya?: string;
+    phone?: string;
     avatarUrl?: string;
+    description?: string;
     email?: string;
     tier?: string;
   };

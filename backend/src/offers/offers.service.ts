@@ -4,7 +4,7 @@ import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
-import { isTrialActiveFromDate } from '../common/subscription-access';
+import { isSupplierFreeAccessActive } from '../common/subscription-access';
 
 @Injectable()
 export class OffersService {
@@ -16,10 +16,26 @@ export class OffersService {
   private async ensureSupplierSubscriptionApproved(supplierId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: supplierId },
-      select: { role: true, status: true, createdAt: true },
+      select: {
+        role: true,
+        status: true,
+        profile: {
+          select: {
+            subscriptionPayments: {
+              select: { createdAt: true },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
-    if (user?.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt)) {
+    if (
+      user?.role === 'supplier' &&
+      user.status === 'approved' &&
+      isSupplierFreeAccessActive(user.profile?.subscriptionPayments[0]?.createdAt)
+    ) {
       return;
     }
 
@@ -43,10 +59,26 @@ export class OffersService {
   private async hasActiveGoldSubscription(supplierId: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: { id: supplierId },
-      select: { role: true, status: true, createdAt: true },
+      select: {
+        role: true,
+        status: true,
+        profile: {
+          select: {
+            subscriptionPayments: {
+              select: { createdAt: true },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
-    if (user?.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt)) {
+    if (
+      user?.role === 'supplier' &&
+      user.status === 'approved' &&
+      isSupplierFreeAccessActive(user.profile?.subscriptionPayments[0]?.createdAt)
+    ) {
       return true;
     }
 
@@ -63,7 +95,7 @@ export class OffersService {
     return !!payment;
   }
 
-  async findAll(search?: string, page = 1, limit = 20) {
+  async findAll(search?: string, wilaya?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const now = new Date();
 
@@ -76,6 +108,9 @@ export class OffersService {
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
       ];
+    }
+    if (wilaya) {
+      where.supplier.wilaya = wilaya;
     }
 
     const [offers, total] = await Promise.all([
@@ -92,8 +127,11 @@ export class OffersService {
             select: {
               id: true,
               companyName: true,
+              address: true,
               wilaya: true,
+              phone: true,
               avatarUrl: true,
+              description: true,
               user: { select: { email: true } },
               subscriptionPayments: {
                 where: { status: 'approved', isActive: true },
@@ -120,8 +158,11 @@ export class OffersService {
       supplier: {
         id: o.supplier.id,
         name: o.supplier.companyName,
+        address: o.supplier.address,
         wilaya: o.supplier.wilaya,
+        phone: o.supplier.phone,
         avatarUrl: o.supplier.avatarUrl,
+        description: o.supplier.description,
         email: o.supplier.user.email,
         tier: o.supplier.subscriptionPayments[0]?.subscriptionPlan?.tier ?? 'bronze',
       },

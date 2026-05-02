@@ -29,10 +29,11 @@ export class OffersController {
   @Roles('pharmacist', 'admin', 'supplier')
   findAll(
     @Query('search') search?: string,
+    @Query('wilaya') wilaya?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit = 20,
   ) {
-    return this.service.findAll(search, page, limit);
+    return this.service.findAll(search, wilaya, page, limit);
   }
 
   @Get('my')

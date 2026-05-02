@@ -5,7 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { getUploadDir } from '../common/uploads';
-import { getTrialDaysForDate, getTrialEndDate, isTrialActiveFromDate } from '../common/subscription-access';
+import {
+  FIRST_SUBSCRIPTION_TRIAL_DAYS,
+  LAUNCH_PROMO_END,
+  getTrialEndDate,
+  isLaunchPromoActive,
+  isSupplierFreeAccessActive,
+} from '../common/subscription-access';
 
 @Injectable()
 export class SuppliersService {
@@ -14,10 +20,26 @@ export class SuppliersService {
   private async ensureSupplierSubscriptionApproved(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, status: true, createdAt: true },
+      select: {
+        role: true,
+        status: true,
+        profile: {
+          select: {
+            subscriptionPayments: {
+              select: { createdAt: true },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
-    if (user?.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt)) {
+    if (
+      user?.role === 'supplier' &&
+      user.status === 'approved' &&
+      isSupplierFreeAccessActive(user.profile?.subscriptionPayments[0]?.createdAt)
+    ) {
       return;
     }
 
@@ -62,6 +84,7 @@ export class SuppliersService {
           companyName: true,
           address: true,
           wilaya: true,
+          phone: true,
           avatarUrl: true,
           description: true,
           user: { select: { email: true, createdAt: true } },
@@ -93,6 +116,7 @@ export class SuppliersService {
         companyName: s.companyName,
         address: s.address,
         wilaya: s.wilaya,
+        phone: s.phone,
         avatarUrl: s.avatarUrl,
         description: s.description,
         email: s.user.email,
@@ -321,28 +345,63 @@ export class SuppliersService {
       select: { status: true, role: true, createdAt: true },
     });
 
-    const trialActive = !!user && user.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt);
-    const trialEnd = user?.createdAt ? getTrialEndDate(user.createdAt) : null;
+    const firstSubscription = await this.prisma.subscriptionPayment.findFirst({
+      where: { userId },
+      include: { subscriptionPlan: true },
+      orderBy: { createdAt: 'asc' },
+    });
 
-    if (!subscription && trialActive && user?.createdAt) {
+    const promoActive = !!user && user.role === 'supplier' && user.status === 'approved' && isLaunchPromoActive();
+    const trialActive =
+      !!user &&
+      user.role === 'supplier' &&
+      user.status === 'approved' &&
+      !promoActive &&
+      !!firstSubscription &&
+      isSupplierFreeAccessActive(firstSubscription.createdAt);
+
+    if (promoActive) {
       return {
-        id: 'trial-access',
+        id: 'launch-promo-access',
         status: 'approved',
         proofUrl: '',
-        subscriptionStart: user.createdAt,
-        subscriptionEnd: trialEnd,
+        subscriptionStart: user?.createdAt ?? new Date(),
+        subscriptionEnd: LAUNCH_PROMO_END,
         isActive: true,
-        createdAt: user.createdAt,
+        createdAt: user?.createdAt ?? new Date(),
         trialActive: true,
         accessGranted: true,
         subscriptionPlan: {
-          id: 'trial-plan',
-          name: 'Or offert',
+          id: 'launch-promo-plan',
+          name: 'Mois offert',
           tier: 'gold',
           price: 0,
           yearlyPrice: 0,
-          durationDays: getTrialDaysForDate(user.createdAt),
+          durationDays: 30,
           features: [],
+        },
+      };
+    }
+
+    if (!subscription && trialActive && firstSubscription) {
+      return {
+        id: 'first-subscription-trial-access',
+        status: 'approved',
+        proofUrl: firstSubscription.proofUrl,
+        subscriptionStart: firstSubscription.createdAt,
+        subscriptionEnd: getTrialEndDate(firstSubscription.createdAt),
+        isActive: true,
+        createdAt: firstSubscription.createdAt,
+        trialActive: true,
+        accessGranted: true,
+        subscriptionPlan: {
+          id: firstSubscription.subscriptionPlan.id,
+          name: `${firstSubscription.subscriptionPlan.name} - semaine offerte`,
+          tier: 'gold',
+          price: firstSubscription.subscriptionPlan.price,
+          yearlyPrice: firstSubscription.subscriptionPlan.yearlyPrice,
+          durationDays: FIRST_SUBSCRIPTION_TRIAL_DAYS,
+          features: firstSubscription.subscriptionPlan.features,
         },
       };
     }

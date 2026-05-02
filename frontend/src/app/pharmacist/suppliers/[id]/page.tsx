@@ -2,7 +2,7 @@
 // src/app/pharmacist/suppliers/[id]/page.tsx
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { MapPin, Phone, Mail, Package, Gift, Star } from 'lucide-react';
+import { Download, Eye, MapPin, Phone, Mail, Package, Gift, Star } from 'lucide-react';
 import { useSupplier, useCreateRating } from '@/hooks/useApi';
 import { Avatar, TierBadge, Stars, Spinner, Modal, Empty } from '@/components/ui';
 import api from '@/lib/api';
@@ -40,6 +40,16 @@ export default function SupplierDetailPage() {
     const a = document.createElement('a');
     a.href = resolvedFileUrl;
     a.download = '';
+    a.click();
+  };
+
+  const handleOfferDownload = (fileUrl?: string) => {
+    const resolvedFileUrl = resolveFileUrl(fileUrl);
+    if (!resolvedFileUrl) return;
+    const a = document.createElement('a');
+    a.href = resolvedFileUrl;
+    a.download = '';
+    a.target = '_blank';
     a.click();
   };
 
@@ -108,8 +118,45 @@ export default function SupplierDetailPage() {
                     <p className="text-xs text-gray-500">{l.views} vues · {l.downloads} téléchargements · {new Date(l.createdAt).toLocaleDateString('fr-DZ')}</p>
                   </div>
                   <button onClick={() => handleDownload(l.id, l.fileUrl)} className="btn-secondary text-sm px-3 py-1.5">
-                    📥 Télécharger
+                    <Download size={14} /> Télécharger
                   </button>
+                </div>
+              ))}
+            </div>
+          )}
+      </div>
+
+      {/* Offers */}
+      <div className="card">
+        <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><Gift size={18} /> Offres publiées</h2>
+        {supplier.offers?.length === 0
+          ? <Empty title="Aucune offre disponible" icon={<Gift size={40} />} />
+          : (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {supplier.offers?.map((offer: any) => (
+                <div key={offer.id} className="p-3 bg-gray-50 rounded-xl">
+                  {offer.imageUrl && (
+                    <a href={toAssetUrl(offer.imageUrl)} target="_blank" rel="noreferrer" className="block mb-3">
+                      <img src={toAssetUrl(offer.imageUrl)} alt={offer.title} className="w-full h-36 object-cover rounded-lg" />
+                    </a>
+                  )}
+                  <p className="font-medium text-gray-900 line-clamp-2">{offer.title}</p>
+                  {offer.description && <p className="text-sm text-gray-600 line-clamp-2 mt-1">{offer.description}</p>}
+                  <p className="text-xs text-gray-500 mt-2">
+                    {offer.views} vues · expire le {new Date(offer.expiresAt).toLocaleDateString('fr-DZ')}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {offer.imageUrl && (
+                      <a href={toAssetUrl(offer.imageUrl)} target="_blank" rel="noreferrer" className="btn-secondary text-sm px-3 py-1.5">
+                        <Eye size={14} /> Photo
+                      </a>
+                    )}
+                    {offer.fileUrl && (
+                      <button onClick={() => handleOfferDownload(offer.fileUrl)} className="btn-primary text-sm px-3 py-1.5">
+                        <Download size={14} /> Télécharger
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

@@ -12,7 +12,7 @@ export const KEYS = {
   supplierSubscription: ['supplier', 'subscription'],
   plans: ['plans'],
   listings: ['listings', 'my'],
-  listingSearch: (products: string[]) => ['listings', 'search', products],
+  listingSearch: (products: string[], wilaya?: string) => ['listings', 'search', products, wilaya],
   offers: (p: any) => ['offers', p],
   myOffers: ['offers', 'my'],
   notifications: (p: any) => ['notifications', p],
@@ -107,10 +107,10 @@ export const useMyListings = () =>
     staleTime: 60 * 1000,
   });
 
-export const useSearchListings = (products: string[], enabled: boolean) =>
+export const useSearchListings = (products: string[], enabled: boolean, wilaya?: string) =>
   useQuery<{ data: Listing[]; total: number }>({
-    queryKey: KEYS.listingSearch(products),
-    queryFn: () => api.post('/listings/search', { products }).then(r => r.data),
+    queryKey: KEYS.listingSearch(products, wilaya),
+    queryFn: () => api.post('/listings/search', { products, wilaya }).then(r => r.data),
     enabled,
     staleTime: 30 * 1000,
   });
@@ -132,7 +132,7 @@ export const useDeleteListing = () => {
 };
 
 // ── Offers ───────────────────────────────────────────────────────────────────
-export const useOffers = (params: { search?: string; page?: number } = {}) =>
+export const useOffers = (params: { search?: string; wilaya?: string; page?: number } = {}) =>
   useQuery<{ data: Offer[]; total: number; totalPages: number }>({
     queryKey: KEYS.offers(params),
     queryFn: () => api.get('/offers', { params }).then(r => r.data),
@@ -275,6 +275,14 @@ export const useMarkMessageRead = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.patch(`/admin/messages/${id}/read`).then(r => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'messages'] }),
+  });
+};
+
+export const useDeleteMessage = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/admin/messages/${id}`).then(r => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'messages'] }),
   });
 };

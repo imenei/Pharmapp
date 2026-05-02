@@ -9,7 +9,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getUploadDir } from '../common/uploads';
-import { isTrialActiveFromDate } from '../common/subscription-access';
+import { isSupplierFreeAccessActive } from '../common/subscription-access';
 
 @Injectable()
 export class ListingsService {
@@ -23,10 +23,26 @@ export class ListingsService {
   private async ensureSupplierSubscriptionApproved(supplierId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: supplierId },
-      select: { role: true, status: true, createdAt: true },
+      select: {
+        role: true,
+        status: true,
+        profile: {
+          select: {
+            subscriptionPayments: {
+              select: { createdAt: true },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
-    if (user?.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt)) {
+    if (
+      user?.role === 'supplier' &&
+      user.status === 'approved' &&
+      isSupplierFreeAccessActive(user.profile?.subscriptionPayments[0]?.createdAt)
+    ) {
       return;
     }
 
@@ -50,10 +66,26 @@ export class ListingsService {
   private async hasActiveGoldSubscription(supplierId: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: { id: supplierId },
-      select: { role: true, status: true, createdAt: true },
+      select: {
+        role: true,
+        status: true,
+        profile: {
+          select: {
+            subscriptionPayments: {
+              select: { createdAt: true },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
-    if (user?.role === 'supplier' && user.status === 'approved' && isTrialActiveFromDate(user.createdAt)) {
+    if (
+      user?.role === 'supplier' &&
+      user.status === 'approved' &&
+      isSupplierFreeAccessActive(user.profile?.subscriptionPayments[0]?.createdAt)
+    ) {
       return true;
     }
 
@@ -200,14 +232,17 @@ export class ListingsService {
     return products;
   }
 
-  async searchByProducts(productNames: string[], page = 1, limit = 20) {
+  async searchByProducts(productNames: string[], wilaya?: string, page = 1, limit = 20) {
     const valid = (productNames || []).map((n) => n?.trim()).filter((n) => n && n.length >= 2);
     if (!valid.length) return { data: [], total: 0, page, limit, totalPages: 0 };
 
     const skip = (page - 1) * limit;
 
     const matched = await this.prisma.listingProduct.findMany({
-      where: { OR: valid.map((name) => ({ productName: { contains: name, mode: 'insensitive' as const } })) },
+      where: {
+        OR: valid.map((name) => ({ productName: { contains: name, mode: 'insensitive' as const } })),
+        ...(wilaya ? { listing: { supplier: { wilaya } } } : {}),
+      },
       select: { listingId: true },
       distinct: ['listingId'],
     });
@@ -223,7 +258,9 @@ export class ListingsService {
       include: {
         supplier: {
           select: {
-            id: true, companyName: true, wilaya: true, avatarUrl: true,
+            id: true, companyName: true, address: true, wilaya: true, phone: true, avatarUrl: true,
+            description: true,
+            user: { select: { email: true } },
             subscriptionPayments: {
               where: { status: 'approved', isActive: true },
               select: { subscriptionPlan: { select: { tier: true } } },
@@ -246,7 +283,9 @@ export class ListingsService {
         views: l.views, downloads: l.downloads, createdAt: l.createdAt,
         supplier: {
           id: l.supplier.id, name: l.supplier.companyName,
-          wilaya: l.supplier.wilaya, avatarUrl: l.supplier.avatarUrl,
+          address: l.supplier.address, wilaya: l.supplier.wilaya,
+          phone: l.supplier.phone, avatarUrl: l.supplier.avatarUrl,
+          description: l.supplier.description, email: l.supplier.user.email,
           tier: l.supplier.subscriptionPayments[0]?.subscriptionPlan?.tier ?? null,
         },
         matchingProducts: l.products.map((p) => ({
