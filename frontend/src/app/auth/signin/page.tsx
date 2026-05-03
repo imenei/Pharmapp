@@ -34,7 +34,7 @@ export default function SigninPage() {
       // 👤 Set user in context
       setUser(user);
 
-      // 🚀 Safe navigation (avoid React race issues)
+      // 🚀 Safe navigation
       setTimeout(() => {
         if (user.status !== 'approved' && user.role !== 'admin') {
           router.push('/waiting-approval');
@@ -44,12 +44,8 @@ export default function SigninPage() {
       }, 0);
 
     } catch (err: any) {
-      // ⚠️ Fully safe error handling
-      setError(
-        err?.response?.data?.message ||
-        err?.message ||
-        'Email ou mot de passe incorrect'
-      );
+      // ✅ MESSAGE SÉCURISÉ (pas de fuite d'info technique)
+      setError('Email ou mot de passe incorrect');
     } finally {
       setLoading(false);
     }

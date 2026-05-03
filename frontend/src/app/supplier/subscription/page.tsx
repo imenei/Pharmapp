@@ -262,6 +262,21 @@ export default function SupplierSubscriptionPage() {
             <p>Effectuez votre virement bancaire puis telechargez votre recu ci-dessous.</p>
           </div>
 
+          {/* ✅ BLOC AJOUTÉ */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
+            <h3 className="font-semibold text-gray-900">Paiement par virement bancaire</h3>
+            <p><strong>Nom du beneficiaire :</strong> Pharma Flow</p>
+            <p><strong>Banque :</strong> BDL Algerie</p>
+            <p><strong>RIB :</strong> 123 456 789 000</p>
+            <p><strong>SWIFT :</strong> BNALDZAL</p>
+
+            <div className="pt-2 text-gray-600 space-y-1">
+              <p>1. Effectuez le virement depuis votre banque</p>
+              <p>2. Prenez une capture du recu</p>
+              <p>3. Telechargez-la sur la plateforme</p>
+            </div>
+          </div>
+
           <div>
             <label className="label">Deposer le recu de virement *</label>
             <div
